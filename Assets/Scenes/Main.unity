@@ -171,7 +171,7 @@ MonoBehaviour:
   circleStartVerts: 8
   dDesired: 0.8
   maxPointsPerLeafNode: 32
-  debug: 1
+  debug: 0
 --- !u!120 &1508438074
 LineRenderer:
   m_ObjectHideFlags: 0

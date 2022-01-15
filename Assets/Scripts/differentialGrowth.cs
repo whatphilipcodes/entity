@@ -47,11 +47,14 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AttractiveNodes(0.001f);
+        //AttractiveNodes(0.001f);
         RenderLine();
         if (Input.GetMouseButtonDown(0))
         {
-            SubdivideTarget(1);
+            //SubdivideTarget(1);
+            Vector3[] test = new Vector3 [1];
+            test[0] = new Vector3(0,0,0);
+            injectNodesToKDTree(test, 2);
         }
 
         // Debug area
@@ -140,19 +143,34 @@ public class differentialGrowth : MonoBehaviour
     {
         Vector3[] tmp = new Vector3[1];
         Vector3 PtoQ = nodes.Points[sIndex + 1] - nodes.Points[sIndex];
-        tmp[0] = PtoQ.normalized * (PtoQ.magnitude/2);
+        tmp[0] = nodes.Points[sIndex] + PtoQ.normalized * (PtoQ.magnitude/2);
         injectNodesToKDTree(tmp, sIndex);
     }
 
     void injectNodesToKDTree(Vector3[] points, int splitIndex)
     {
         int oldCount = nodes.Count;
+        Vector3[] shiftBuffer = new Vector3[oldCount + points.Length - splitIndex];
+        print("shiftBuffer.Length = " + shiftBuffer.Length);
         nodes.SetCount(oldCount + points.Length);
-        for (int i = splitIndex, j = 0; j < points.Length; i++, j++)
+        print("new Nodes.Count = " + nodes.Count + " (old Nodes.Count = " + oldCount);
+
+        // Load new points into buffer
+        for (int i = 0; i < points.Length; i++)
         {
-            nodes.Points[i + points.Length] = nodes.Points[i];
-            nodes.Points[i] = points[j];
+            shiftBuffer[i] = points[i];
         }
+        // Load shifted points from KD Tree after new points into buffer
+        for (int i = points.Length, j = splitIndex; i < shiftBuffer.Length; i++, j++)
+        {
+            shiftBuffer[i] = nodes.Points[j];
+        }
+        // Write buffer into KD Tree
+        for (int i = splitIndex, j = 0; i < nodes.Count; i++, j++)
+        {
+            nodes.Points[i] = shiftBuffer[j];
+        }
+
         nodes.Rebuild();
 
         if (debug == true)
