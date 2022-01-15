@@ -25,10 +25,11 @@ public class wrappedIndexTest : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            int x = 2;
+            int x = 1; // startIndex of loop
             // wrapped index test
-            for (int i = 0, j = x; i < output.Length; i++, j = i % loop.Length)
+            for (int i = 0, j; i < output.Length; i++)
             {
+                j = (i + x) % loop.Length;
                 output[i] = loop[j];
             }
 
