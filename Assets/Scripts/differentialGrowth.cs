@@ -2,8 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// Enables KDTree usage
+// Enable KDTree usage
 using DataStructures.ViliWonka.KDTree;
+
+// Enable Helpers
+using Seed.Utilities;
 
 public class differentialGrowth : MonoBehaviour
 {
@@ -12,13 +15,15 @@ public class differentialGrowth : MonoBehaviour
     ////////////////////////////////////////
     
     // gameObject = current object, GameObject = class name
-    // wrap loop indices (tested on for) using modulo [%] operator
+
+    // wrap loop indices exceeding array length (tested on for) using modulo [%] operator ! See wrappedIndexTest.cs
+    // use cutom Utils.mod() method for negative [-i] indices ! See helperFunctions
 
     ///////////////////////////////////////
 
     // Editor Input
     public int circleStartVerts = 8;
-    public float dDesired = 0.8f;
+    public float desiredDistance= 0.8f;
     public int maxPointsPerLeafNode = 32; // KDTree Balance; Default is 32
     public bool debug;
 
@@ -26,7 +31,6 @@ public class differentialGrowth : MonoBehaviour
     KDTree nodes;
     KDQuery query;
     LineRenderer line;
-
 
     // Start is called before the first frame update
     void Start()
@@ -45,19 +49,20 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AttractiveNodes(0.01f);
+        AttractiveNodes(0.005f);
         RenderLine();
         if (Input.GetMouseButtonDown(0))
         {
-            SubdivideTarget(1);
+            SubdivideTarget(Random.Range(0,nodes.Count));
         }
 
         // Debug area
         if ((debug == true) && (Input.GetKeyDown("space")))
         {
-            Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") nodes."  );
+            Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") node(s)."  );
         }
     }
+
     Vector3[] InitStartCircle(float x, float y, float z, float radius, int verts)
     {
         //Settings
@@ -65,7 +70,7 @@ public class differentialGrowth : MonoBehaviour
         Vector3 origin = new Vector3(x,y,z);
 
         //Init
-        float a = 2*Mathf.PI;
+        float a = 2 * Mathf.PI;
         float angleInc = a / verts;
         Vector3 point;
 
@@ -99,24 +104,24 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-    void AttractiveNodes(float scl)
+    void AttractiveNodes(float scaleFactor)
     {
-        Vector3 ND;
-        float d;
-        float amt;
+        Vector3 currentToNext;
+        float distance;
+        float amount;
         for (int i = 0; i < nodes.Count; i++)
         {
-            if (i == nodes.Count-1)
+            if (i == nodes.Count - 1)
             {
-                ND = nodes.Points[0]-nodes.Points[i];
+                currentToNext = nodes.Points[0] - nodes.Points[i];
             } else {
-                ND = nodes.Points[i+1]-nodes.Points[i];
+                currentToNext = nodes.Points[i + 1] - nodes.Points[i];
             }
-            d = ND.magnitude;
-            amt = (d - dDesired) * scl;
-            if (d != dDesired)
+            distance = currentToNext.magnitude;
+            amount = (distance - desiredDistance) * scaleFactor;
+            if (distance != desiredDistance)
             {
-                nodes.Points[i] = nodes.Points[i] + ND.normalized * amt;
+                nodes.Points[i] = nodes.Points[i] + currentToNext.normalized * amount;
             }
         }
         nodes.Rebuild();
@@ -134,15 +139,59 @@ public class differentialGrowth : MonoBehaviour
         return resultIndices;
     }
 
-    void SubdivideTarget(int sIndex)
+    void SubdivideTarget(int splitIndex) // must work for 0 - nodes.Count as splitIndex
     {
-        Vector3[] tmp = new Vector3[1];
-        Vector3 PtoQ = nodes.Points[sIndex] - nodes.Points[sIndex - 1];
-        tmp[0] = nodes.Points[sIndex - 1] + PtoQ.normalized * (PtoQ.magnitude/2);
-        injectNodesToKDTree(tmp, sIndex);
+        int nextIndex = (splitIndex + 1) % nodes.Count; // catches values equal to nodes.Count
+        print(splitIndex + " / " + nextIndex);
+        Vector3 currentToNext = nodes.Points[nextIndex] - nodes.Points[splitIndex];
+        Vector3 midPoint = nodes.Points[splitIndex] + currentToNext.normalized * (currentToNext.magnitude/2);
+        InjectNodeToKDTree(midPoint, nextIndex);
     }
 
-    void injectNodesToKDTree(Vector3[] points, int splitIndex)
+    void InjectNodeToKDTree(Vector3 point, int nextIndex)
+    {
+        int oldCount = nodes.Count;
+        Vector3[] shiftBuffer = new Vector3[oldCount + 1 - nextIndex];
+        nodes.SetCount(oldCount + 1);
+
+        // Load new point into buffer
+        shiftBuffer[0] = point;
+        // Load shifted points from KD Tree behind new points into buffer
+        for (int i = 1, j = nextIndex; i < shiftBuffer.Length; i++, j++)
+        {
+            shiftBuffer[i] = nodes.Points[j];
+        }
+        // Write buffer into KD Tree
+        for (int i = nextIndex, j = 0; i < nodes.Count; i++, j++)
+        {
+            nodes.Points[i] = shiftBuffer[j];
+        }
+        nodes.Rebuild();
+
+        if (debug == true)
+        {
+            Debug.Log("KDTree //nodes now contains a new node " + point + " at index " + nextIndex + ". There are " + nodes.Count + " node(s) in total.");
+        }
+    }
+
+    void addNodesToKDTree(Vector3[] points)
+    {
+        int oldCount = nodes.Count;
+        nodes.SetCount(oldCount + points.Length);
+        for (int i = oldCount, j = 0; i < nodes.Points.Length; i++, j++)
+        {
+            nodes.Points[i] = points[j];
+        }
+        nodes.Rebuild();
+
+        if (debug == true)
+        {
+            Debug.Log("KDTree //nodes now contains new nodes at index " + oldCount + ". There are " + nodes.Count + " node(s) in total.");
+        }
+    }
+
+    /*
+    void InjectNodesToKDTree(Vector3 point, int splitIndex)
     {
         int oldCount = nodes.Count;
         Vector3[] shiftBuffer = new Vector3[oldCount + points.Length - splitIndex];
@@ -163,28 +212,11 @@ public class differentialGrowth : MonoBehaviour
         {
             nodes.Points[i] = shiftBuffer[j];
         }
-
         nodes.Rebuild();
 
         if (debug == true)
         {
-            Debug.Log("KDTree //nodes now contains new nodes at index " + splitIndex + ". There are " + nodes.Count + " node(s) in total.");
+            Debug.Log("KDTree //nodes now contains " + points.Length + " new node(s) at index " + splitIndex + ". There are " + nodes.Count + " node(s) in total.");
         }
-    }
-
-    void addNodesToKDTree(Vector3[] points)
-    {
-        int oldCount = nodes.Count;
-        nodes.SetCount(oldCount + points.Length);
-        for (int i = oldCount, j = 0; i < nodes.Points.Length; i++, j++)
-        {
-            nodes.Points[i] = points[j];
-        }
-        nodes.Rebuild();
-
-        if (debug == true)
-        {
-            Debug.Log("KDTree //nodes now contains new nodes at index " + oldCount + ". There are " + nodes.Count + " node(s) in total.");
-        }
-    }
+    } */
 }

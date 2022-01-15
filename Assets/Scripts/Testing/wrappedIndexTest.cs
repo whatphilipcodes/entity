@@ -28,7 +28,7 @@ public class wrappedIndexTest : MonoBehaviour
             int x = 1; // startIndex of loop
             // wrapped index test
             for (int i = 0, j; i < output.Length; i++)
-            {
+            {   // [j] must be calculated before function, therefore can't be at the top
                 j = (i + x) % loop.Length;
                 output[i] = loop[j];
             }

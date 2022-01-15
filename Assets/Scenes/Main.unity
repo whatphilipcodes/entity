@@ -169,7 +169,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   circleStartVerts: 8
-  dDesired: 0.8
+  desiredDistance: 1
   maxPointsPerLeafNode: 32
   debug: 1
 --- !u!120 &1508438074
@@ -335,6 +335,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: customCamera
+      objectReference: {fileID: 0}
+    - target: {fileID: 901233310519285340, guid: 54f9abc97340a4744a2017ff17a835e8,
+        type: 3}
+      propertyPath: m_TagString
+      value: MainCamera
       objectReference: {fileID: 0}
     - target: {fileID: 5057121820505525679, guid: 54f9abc97340a4744a2017ff17a835e8,
         type: 3}
