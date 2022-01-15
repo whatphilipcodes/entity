@@ -11,10 +11,8 @@ public class differentialGrowth : MonoBehaviour
     // Notes on general stuff //
     ////////////////////////////////////////
     
-    // gameObject = aktuelles Objekt, GameObject = Name der Klasse
-    //
-    //
-    //
+    // gameObject = current object, GameObject = class name
+    // wrap loop indices (tested on for) using modulo [%] operator
 
     ///////////////////////////////////////
 
@@ -47,14 +45,11 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //AttractiveNodes(0.001f);
+        AttractiveNodes(0.01f);
         RenderLine();
         if (Input.GetMouseButtonDown(0))
         {
-            //SubdivideTarget(1);
-            Vector3[] test = new Vector3 [1];
-            test[0] = new Vector3(0,0,0);
-            injectNodesToKDTree(test, 2);
+            SubdivideTarget(1);
         }
 
         // Debug area
@@ -142,8 +137,8 @@ public class differentialGrowth : MonoBehaviour
     void SubdivideTarget(int sIndex)
     {
         Vector3[] tmp = new Vector3[1];
-        Vector3 PtoQ = nodes.Points[sIndex + 1] - nodes.Points[sIndex];
-        tmp[0] = nodes.Points[sIndex] + PtoQ.normalized * (PtoQ.magnitude/2);
+        Vector3 PtoQ = nodes.Points[sIndex] - nodes.Points[sIndex - 1];
+        tmp[0] = nodes.Points[sIndex - 1] + PtoQ.normalized * (PtoQ.magnitude/2);
         injectNodesToKDTree(tmp, sIndex);
     }
 
@@ -151,9 +146,7 @@ public class differentialGrowth : MonoBehaviour
     {
         int oldCount = nodes.Count;
         Vector3[] shiftBuffer = new Vector3[oldCount + points.Length - splitIndex];
-        print("shiftBuffer.Length = " + shiftBuffer.Length);
         nodes.SetCount(oldCount + points.Length);
-        print("new Nodes.Count = " + nodes.Count + " (old Nodes.Count = " + oldCount);
 
         // Load new points into buffer
         for (int i = 0; i < points.Length; i++)
