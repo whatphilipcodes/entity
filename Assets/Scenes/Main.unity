@@ -168,8 +168,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae22bb13fc0a947319993816039ea96f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circleStartVerts: 8
-  desiredDistance: 1
+  circleStartVerts: 32
+  desiredDistance: 0.5
+  searchRadius: 1
   maxPointsPerLeafNode: 32
   debug: 1
 --- !u!120 &1508438074

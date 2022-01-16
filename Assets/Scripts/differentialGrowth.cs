@@ -17,19 +17,21 @@ public class differentialGrowth : MonoBehaviour
     // gameObject = current object, GameObject = class name
 
     // wrap loop indices exceeding array length (tested on for) using modulo [%] operator ! See wrappedIndexTest.cs
-    // use cutom Utils.mod() method for negative [-i] indices ! See helperFunctions
+    // use cutom Utils.mod() method for negative [-i] indices ! See helperFunctions.cs
 
     ///////////////////////////////////////
 
     // Editor Input
     public int circleStartVerts = 8;
-    public float desiredDistance= 0.8f;
+    public float desiredDistance = 0.8f;
+    public float searchRadius = 0.8f;
     public int maxPointsPerLeafNode = 32; // KDTree Balance; Default is 32
     public bool debug;
 
     // Global Vars
     KDTree nodes;
     KDQuery query;
+
     LineRenderer line;
 
     // Start is called before the first frame update
@@ -37,6 +39,7 @@ public class differentialGrowth : MonoBehaviour
     {
         //Init
         line = gameObject.GetComponent<LineRenderer>();
+        query = new KDQuery();
 
         //Check Resources
         if (line == null)
@@ -49,11 +52,12 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AttractiveNodes(0.005f);
+        AttractiveNodes(0.005f, desiredDistance);
+        RepulsiveNodes(0.005f, desiredDistance, searchRadius);
         RenderLine();
         if (Input.GetMouseButtonDown(0))
         {
-            SubdivideTarget(Random.Range(0,nodes.Count));
+            SubdivideTarget(0);
         }
 
         // Debug area
@@ -104,7 +108,7 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-    void AttractiveNodes(float scaleFactor)
+    void AttractiveNodes(float scaleFactor, float desiredDisance)
     {
         Vector3 currentToNext;
         float distance;
@@ -127,9 +131,37 @@ public class differentialGrowth : MonoBehaviour
         nodes.Rebuild();
     }
 
-    void RepulsiveNodes(float scl)
+    void RepulsiveNodes(float scaleFacetor, float desiredDistance, float queryRadius)
     {
+        float distance;
+        Vector3 currentToNext;
 
+        Vector3[] distanceCheckPoints = null;
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            var resultIndices = new List<int>();
+            query.Radius(nodes, nodes.Points[0], queryRadius, resultIndices); // In KDTree: Search for points within given radius
+            if (resultIndices == null) return; // Skip if there are no points in radius proximity
+            distanceCheckPoints = new Vector3[resultIndices.Count]; // Create array to write results into
+            for (int j = 0; j < resultIndices.Count; j++)
+            {
+                distanceCheckPoints[j] = nodes.Points[resultIndices[j]]; // Write points into array
+                currentToNext = distanceCheckPoints[(j + 1) % resultIndices.Count] - nodes.Points[i];
+                distance = currentToNext.magnitude;
+                if (distance < desiredDistance)
+                {
+                    nodes.Points[i] = nodes.Points[i] + (-currentToNext.normalized) * (desiredDistance - distance);
+                }
+            }
+
+        }
+        nodes.Rebuild();
+        /*
+        for (int i = 0; i < distanceCheckPoints.Length; i++)
+        {
+            print(distanceCheckPoints[0]);
+        }
+        */
     }
 
     List<int> findInRadiusKDTree(Vector3 point, float radius)
