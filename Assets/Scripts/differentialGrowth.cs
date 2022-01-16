@@ -17,7 +17,10 @@ public class differentialGrowth : MonoBehaviour
     // gameObject = current object, GameObject = class name
 
     // wrap loop indices exceeding array length (tested on for) using modulo [%] operator ! See wrappedIndexTest.cs
-    // use cutom Utils.mod() method for negative [-i] indices ! See helperFunctions.cs
+    // use cutom Utils.mod() method to handle negative [-i] indices ! See helperFunctions.cs
+
+    // The Debug class is very useful when developing complex vector calculations
+    // see: https://docs.unity3d.com/ScriptReference/Debug.html
 
     ///////////////////////////////////////
 
@@ -38,6 +41,7 @@ public class differentialGrowth : MonoBehaviour
     void Start()
     {
         //Init
+        initKDTree(InitStartCircle(0,0,0,1,circleStartVerts));
         line = gameObject.GetComponent<LineRenderer>();
         query = new KDQuery();
 
@@ -46,15 +50,15 @@ public class differentialGrowth : MonoBehaviour
         {
             Debug.LogError("Please add Line Renderer to GameObject in Editor");
         }
-        initKDTree(InitStartCircle(0,0,0,1,circleStartVerts));
     }
 
     // Update is called once per frame
     void Update()
     {
         AttractiveNodes(0.005f, desiredDistance);
-        RepulsiveNodes(0.005f, desiredDistance, searchRadius);
+        //RepulsiveNodes(0.005f, desiredDistance, searchRadius);
         RenderLine();
+
         if (Input.GetMouseButtonDown(0))
         {
             SubdivideTarget(0);
@@ -127,6 +131,7 @@ public class differentialGrowth : MonoBehaviour
             {
                 nodes.Points[i] = nodes.Points[i] + currentToNext.normalized * amount;
             }
+            if (debug == true) Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, .1f);
         }
         nodes.Rebuild();
     }
@@ -151,17 +156,12 @@ public class differentialGrowth : MonoBehaviour
                 if (distance < desiredDistance)
                 {
                     nodes.Points[i] = nodes.Points[i] + (-currentToNext.normalized) * (desiredDistance - distance);
+                    Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, 1f);
                 }
             }
 
         }
         nodes.Rebuild();
-        /*
-        for (int i = 0; i < distanceCheckPoints.Length; i++)
-        {
-            print(distanceCheckPoints[0]);
-        }
-        */
     }
 
     List<int> findInRadiusKDTree(Vector3 point, float radius)
