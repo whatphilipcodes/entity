@@ -26,7 +26,9 @@ public class differentialGrowth : MonoBehaviour
 
     // Editor Input
     public int circleStartVerts = 8;
-    public float desiredDistance = 0.8f;
+    public float circleRadius = 2;
+    public float maximumDistance = 0.8f;
+    public float minimumDistance = 0.8f;
     public float searchRadius = 0.8f;
     public int maxPointsPerLeafNode = 32; // KDTree Balance; Default is 32
     public bool debug;
@@ -41,7 +43,7 @@ public class differentialGrowth : MonoBehaviour
     void Start()
     {
         //Init
-        initKDTree(InitStartCircle(0,0,0,1,circleStartVerts));
+        initKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
         line = gameObject.GetComponent<LineRenderer>();
         query = new KDQuery();
 
@@ -55,13 +57,20 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AttractiveNodes(0.005f, desiredDistance);
-        //RepulsiveNodes(0.005f, desiredDistance, searchRadius);
+        AttractiveNodes(0.005f, maximumDistance);
         RenderLine();
+
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            Vector3 force = RepulsionForceOnPoint(i, 0.01f);
+            nodes.Points[i]+=force;
+        }
+        nodes.Rebuild();
 
         if (Input.GetMouseButtonDown(0))
         {
-            SubdivideTarget(0);
+            Vector3 force = RepulsionForceOnPoint(0, 0.01f);
+            nodes.Points[0]+=force;
         }
 
         // Debug area
@@ -126,8 +135,8 @@ public class differentialGrowth : MonoBehaviour
                 currentToNext = nodes.Points[i + 1] - nodes.Points[i];
             }
             distance = currentToNext.magnitude;
-            amount = (distance - desiredDistance) * scaleFactor;
-            if (distance != desiredDistance)
+            amount = (distance - maximumDistance) * scaleFactor;
+            if (distance != maximumDistance)
             {
                 nodes.Points[i] = nodes.Points[i] + currentToNext.normalized * amount;
             }
@@ -136,38 +145,38 @@ public class differentialGrowth : MonoBehaviour
         nodes.Rebuild();
     }
 
-    void RepulsiveNodes(float scaleFacetor, float desiredDistance, float queryRadius)
+    Vector3 RepulsionForceOnPoint(int index, float scaleFactor)
     {
-        float distance;
-        Vector3 currentToNext;
+        var resultIndices = findInRadiusKDTree(index, searchRadius);
+        //foreach ( var x in resultIndices) Debug.Log( x.ToString());
 
-        Vector3[] distanceCheckPoints = null;
-        for (int i = 0; i < nodes.Count; i++)
+        float forceSum = 0f;
+        Vector3 directionSum = new Vector3();
+
+        for (int i = 0; i < resultIndices.Count; i++)
         {
-            var resultIndices = new List<int>();
-            query.Radius(nodes, nodes.Points[0], queryRadius, resultIndices); // In KDTree: Search for points within given radius
-            if (resultIndices == null) return; // Skip if there are no points in radius proximity
-            distanceCheckPoints = new Vector3[resultIndices.Count]; // Create array to write results into
-            for (int j = 0; j < resultIndices.Count; j++)
+            Vector3 currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
+            float currentDistance = currentDirection.magnitude;
+            if (currentDistance < minimumDistance)
             {
-                distanceCheckPoints[j] = nodes.Points[resultIndices[j]]; // Write points into array
-                currentToNext = distanceCheckPoints[(j + 1) % resultIndices.Count] - nodes.Points[i];
-                distance = currentToNext.magnitude;
-                if (distance < desiredDistance)
-                {
-                    nodes.Points[i] = nodes.Points[i] + (-currentToNext.normalized) * (desiredDistance - distance);
-                    Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, 1f);
-                }
+                directionSum += currentDirection;
+                forceSum += minimumDistance - currentDistance;
             }
-
+            //Debug.DrawRay(nodes.Points[index], -currentDirection, Color.blue)
         }
-        nodes.Rebuild();
+        //Debug.DrawRay(nodes.Points[index], forceSum * scaleFactor, Color.green, 5f);
+        forceSum -= minimumDistance;
+        //print(forceSum);
+        Vector3 resultForce = new Vector3();
+        resultForce = (nodes.Points[index] + directionSum).normalized * (forceSum * scaleFactor);
+        //Debug.DrawRay(nodes.Points[index], resultForce, Color.cyan, 1f);
+        return resultForce;
     }
 
-    List<int> findInRadiusKDTree(Vector3 point, float radius)
+    List<int> findInRadiusKDTree(int index, float radius)
     {
         var resultIndices = new List<int>();
-        query.Radius(nodes, point, radius, resultIndices);
+        query.Radius(nodes, nodes.Points[index], radius, resultIndices);
         return resultIndices;
     }
 
@@ -250,5 +259,42 @@ public class differentialGrowth : MonoBehaviour
         {
             Debug.Log("KDTree //nodes now contains " + points.Length + " new node(s) at index " + splitIndex + ". There are " + nodes.Count + " node(s) in total.");
         }
-    } */
+    }
+
+    void testRadiusFinder(int index)
+    {
+            var test = findInRadiusKDTree(index, searchRadius);
+            foreach ( var x in test)
+            {
+                Debug.Log( x.ToString());
+            }
+    }
+    
+        void RepulsiveNodes(float scaleFactor, float maximumDistance, float queryRadius)
+    {
+        float distance;
+        Vector3 currentToNext;
+
+        Vector3[] distanceCheckPoints = null;
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            var resultIndices = new List<int>();
+            query.Radius(nodes, nodes.Points[0], queryRadius, resultIndices); // In KDTree: Search for points within given radius
+            if (resultIndices == null) return; // Skip if there are no points in radius proximity
+            distanceCheckPoints = new Vector3[resultIndices.Count]; // Create array to write results into
+            for (int j = 0; j < resultIndices.Count; j++)
+            {
+                distanceCheckPoints[j] = nodes.Points[resultIndices[j]]; // Write points into array
+                currentToNext = distanceCheckPoints[(j + 1) % resultIndices.Count] - nodes.Points[i];
+                distance = currentToNext.magnitude;
+                if (distance < maximumDistance)
+                {
+                    nodes.Points[i] = nodes.Points[i] + (-currentToNext.normalized) * (maximumDistance - distance);
+                    Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, 1f);
+                }
+            }
+        }
+        nodes.Rebuild();
+    }
+    */
 }

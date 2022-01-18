@@ -168,11 +168,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae22bb13fc0a947319993816039ea96f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circleStartVerts: 32
-  desiredDistance: 0.5
+  circleStartVerts: 2048
+  circleRadius: 0.2
+  maximumDistance: 0.05
+  minimumDistance: 0.08
   searchRadius: 1
   maxPointsPerLeafNode: 32
-  debug: 1
+  debug: 0
 --- !u!120 &1508438074
 LineRenderer:
   m_ObjectHideFlags: 0
