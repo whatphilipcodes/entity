@@ -29,14 +29,15 @@ public class differentialGrowth : MonoBehaviour
     public float circleRadius = 2;
     public float maximumDistance = 0.8f;
     public float minimumDistance = 0.8f;
+    public float forceScale = 1;
     public float searchRadius = 0.8f;
+    public bool skipNeighbor = true;
     public int maxPointsPerLeafNode = 32; // KDTree Balance; Default is 32
     public bool debug;
 
     // Global Vars
     KDTree nodes;
     KDQuery query;
-
     LineRenderer line;
 
     // Start is called before the first frame update
@@ -57,20 +58,19 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AttractiveNodes(0.005f, maximumDistance);
+        AttractiveNodes(forceScale, maximumDistance);
         RenderLine();
 
         for (int i = 0; i < nodes.Count; i++)
         {
-            Vector3 force = RepulsionForceOnPoint(i, 0.01f);
+            Vector3 force = RepulsionForceOnPoint(i, forceScale, skipNeighbor);
             nodes.Points[i]+=force;
         }
         nodes.Rebuild();
 
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3 force = RepulsionForceOnPoint(0, 0.01f);
-            nodes.Points[0]+=force;
+
         }
 
         // Debug area
@@ -140,36 +140,45 @@ public class differentialGrowth : MonoBehaviour
             {
                 nodes.Points[i] = nodes.Points[i] + currentToNext.normalized * amount;
             }
-            if (debug == true) Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, .1f);
+            //if (debug == true) Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, .1f);
         }
         nodes.Rebuild();
     }
 
-    Vector3 RepulsionForceOnPoint(int index, float scaleFactor)
+    Vector3 RepulsionForceOnPoint(int index, float scaleFactor, bool skipNeighbor)
     {
         var resultIndices = findInRadiusKDTree(index, searchRadius);
-        //foreach ( var x in resultIndices) Debug.Log( x.ToString());
-
         float forceSum = 0f;
         Vector3 directionSum = new Vector3();
 
         for (int i = 0; i < resultIndices.Count; i++)
         {
-            Vector3 currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
-            float currentDistance = currentDirection.magnitude;
-            if (currentDistance < minimumDistance)
+             Vector3 currentDirection = new Vector3();
+            if (skipNeighbor == true && resultIndices[i] != Utils.mod((index - 1), nodes.Count) && resultIndices[i] != (index + 1) % nodes.Count)
             {
-                directionSum += currentDirection;
-                forceSum += minimumDistance - currentDistance;
+                if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[resultIndices[i]], Color.cyan);
+                currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
+                float currentDistance = currentDirection.magnitude;
+                if (currentDistance < minimumDistance)
+                {
+                    directionSum += currentDirection;
+                    forceSum += minimumDistance - currentDistance;
+                }
+            } else if (skipNeighbor == false) {
+                if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[resultIndices[i]], Color.cyan);
+                currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
+                float currentDistance = currentDirection.magnitude;
+                if (currentDistance < minimumDistance)
+                {
+                    directionSum += currentDirection;
+                    forceSum += minimumDistance - currentDistance;
+                }
             }
-            //Debug.DrawRay(nodes.Points[index], -currentDirection, Color.blue)
         }
-        //Debug.DrawRay(nodes.Points[index], forceSum * scaleFactor, Color.green, 5f);
         forceSum -= minimumDistance;
-        //print(forceSum);
         Vector3 resultForce = new Vector3();
         resultForce = (nodes.Points[index] + directionSum).normalized * (forceSum * scaleFactor);
-        //Debug.DrawRay(nodes.Points[index], resultForce, Color.cyan, 1f);
+        if (debug == true) Debug.DrawRay(nodes.Points[index], resultForce * 100, Color.red);
         return resultForce;
     }
 
