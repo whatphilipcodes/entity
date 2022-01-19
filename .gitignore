@@ -38,3 +38,6 @@ sysinfo.txt
 
 # MacOS
 .DS_Store
+Logs/AssetImportWorker1-prev.log
+Logs/AssetImportWorker0-prev.log
+UserSettings/EditorUserSettings.asset
