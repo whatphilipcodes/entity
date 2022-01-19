@@ -168,15 +168,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae22bb13fc0a947319993816039ea96f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  circleStartVerts: 32
-  circleRadius: 0.8
-  maximumDistance: 0.8
-  minimumDistance: 0.4
-  forceScale: 0.01
+  circleStartVerts: 8
+  circleRadius: 1
+  attractionThreshhold: 0.1
+  repulsionThreshhold: 1
+  forceScale: 0.02
   searchRadius: 0.5
   skipNeighbor: 1
   maxPointsPerLeafNode: 32
-  debug: 1
+  debug: 0
+  debugScale: 1000
 --- !u!120 &1508438074
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -227,7 +228,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.02
+        value: 0.01
         inSlope: 0
         outSlope: 0
         tangentMode: 0

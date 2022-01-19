@@ -27,13 +27,14 @@ public class differentialGrowth : MonoBehaviour
     // Editor Input
     public int circleStartVerts = 8;
     public float circleRadius = 2;
-    public float maximumDistance = 0.8f;
-    public float minimumDistance = 0.8f;
+    public float attractionThreshhold = 0.8f;
+    public float repulsionThreshhold = 0.8f;
     public float forceScale = 1;
     public float searchRadius = 0.8f;
     public bool skipNeighbor = true;
     public int maxPointsPerLeafNode = 32; // KDTree Balance; Default is 32
     public bool debug;
+    public float debugScale = 100;
 
     // Global Vars
     KDTree nodes;
@@ -44,7 +45,7 @@ public class differentialGrowth : MonoBehaviour
     void Start()
     {
         //Init
-        initKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
+        InitKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
         line = gameObject.GetComponent<LineRenderer>();
         query = new KDQuery();
 
@@ -58,19 +59,19 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        AttractiveNodes(forceScale, maximumDistance);
         RenderLine();
 
+        // Growth loop
         for (int i = 0; i < nodes.Count; i++)
         {
-            Vector3 force = RepulsionForceOnPoint(i, forceScale, skipNeighbor);
-            nodes.Points[i]+=force;
+            nodes.Points[i] += AttractionForceOnPoint(i, attractionThreshhold, forceScale);
+            nodes.Points[i] += RepulsionForceOnPoint(i, repulsionThreshhold, forceScale, skipNeighbor);
         }
         nodes.Rebuild();
+        SubdivideTarget (Random.Range(0,nodes.Count));
 
         if (Input.GetMouseButtonDown(0))
         {
-
         }
 
         // Debug area
@@ -102,7 +103,7 @@ public class differentialGrowth : MonoBehaviour
         return shape;
     }
 
-    void initKDTree(Vector3[] firstShape)
+    void InitKDTree(Vector3[] firstShape)
     {
         nodes = new KDTree(firstShape, maxPointsPerLeafNode);
 
@@ -121,31 +122,22 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-    void AttractiveNodes(float scaleFactor, float desiredDisance)
+    Vector3 AttractionForceOnPoint(int index, float attractionThreshhold, float scaleFactor)
     {
-        Vector3 currentToNext;
-        float distance;
-        float amount;
-        for (int i = 0; i < nodes.Count; i++)
+        if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[(index + 1) % nodes.Count], Color.green);
+
+        Vector3 currentToNext = nodes.Points[(index + 1) % nodes.Count] - nodes.Points[index];
+        float distance = currentToNext.magnitude;
+        float amount = (distance - attractionThreshhold) * scaleFactor;
+        if (distance > attractionThreshhold)
         {
-            if (i == nodes.Count - 1)
-            {
-                currentToNext = nodes.Points[0] - nodes.Points[i];
-            } else {
-                currentToNext = nodes.Points[i + 1] - nodes.Points[i];
-            }
-            distance = currentToNext.magnitude;
-            amount = (distance - maximumDistance) * scaleFactor;
-            if (distance != maximumDistance)
-            {
-                nodes.Points[i] = nodes.Points[i] + currentToNext.normalized * amount;
-            }
-            //if (debug == true) Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, .1f);
+            return currentToNext.normalized * amount;
+        } else {
+            return new Vector3();
         }
-        nodes.Rebuild();
     }
 
-    Vector3 RepulsionForceOnPoint(int index, float scaleFactor, bool skipNeighbor)
+    Vector3 RepulsionForceOnPoint(int index, float repulsionThreshhold, float scaleFactor , bool skipNeighbor)
     {
         var resultIndices = findInRadiusKDTree(index, searchRadius);
         float forceSum = 0f;
@@ -159,26 +151,26 @@ public class differentialGrowth : MonoBehaviour
                 if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[resultIndices[i]], Color.cyan);
                 currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
                 float currentDistance = currentDirection.magnitude;
-                if (currentDistance < minimumDistance)
+                if (currentDistance < repulsionThreshhold)
                 {
-                    directionSum += currentDirection;
-                    forceSum += minimumDistance - currentDistance;
+                    directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    forceSum += repulsionThreshhold - currentDistance;
                 }
             } else if (skipNeighbor == false) {
                 if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[resultIndices[i]], Color.cyan);
                 currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
                 float currentDistance = currentDirection.magnitude;
-                if (currentDistance < minimumDistance)
+                if (currentDistance < repulsionThreshhold)
                 {
-                    directionSum += currentDirection;
-                    forceSum += minimumDistance - currentDistance;
+                    directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    forceSum += repulsionThreshhold - currentDistance;
                 }
             }
         }
-        forceSum -= minimumDistance;
+        forceSum -= repulsionThreshhold;
         Vector3 resultForce = new Vector3();
-        resultForce = (nodes.Points[index] + directionSum).normalized * (forceSum * scaleFactor);
-        if (debug == true) Debug.DrawRay(nodes.Points[index], resultForce * 100, Color.red);
+        resultForce = directionSum.normalized * (forceSum * scaleFactor);
+        if (debug == true) Debug.DrawRay(nodes.Points[index], resultForce * debugScale, Color.red);
         return resultForce;
     }
 
@@ -192,7 +184,7 @@ public class differentialGrowth : MonoBehaviour
     void SubdivideTarget(int splitIndex) // must work for 0 - nodes.Count as splitIndex
     {
         int nextIndex = (splitIndex + 1) % nodes.Count; // catches values equal to nodes.Count
-        print(splitIndex + " / " + nextIndex);
+        //print(splitIndex + " / " + nextIndex);
         Vector3 currentToNext = nodes.Points[nextIndex] - nodes.Points[splitIndex];
         Vector3 midPoint = nodes.Points[splitIndex] + currentToNext.normalized * (currentToNext.magnitude/2);
         InjectNodeToKDTree(midPoint, nextIndex);
@@ -223,87 +215,4 @@ public class differentialGrowth : MonoBehaviour
             Debug.Log("KDTree //nodes now contains a new node " + point + " at index " + nextIndex + ". There are " + nodes.Count + " node(s) in total.");
         }
     }
-
-    void addNodesToKDTree(Vector3[] points)
-    {
-        int oldCount = nodes.Count;
-        nodes.SetCount(oldCount + points.Length);
-        for (int i = oldCount, j = 0; i < nodes.Points.Length; i++, j++)
-        {
-            nodes.Points[i] = points[j];
-        }
-        nodes.Rebuild();
-
-        if (debug == true)
-        {
-            Debug.Log("KDTree //nodes now contains new nodes at index " + oldCount + ". There are " + nodes.Count + " node(s) in total.");
-        }
-    }
-
-    /*
-    void InjectNodesToKDTree(Vector3 point, int splitIndex)
-    {
-        int oldCount = nodes.Count;
-        Vector3[] shiftBuffer = new Vector3[oldCount + points.Length - splitIndex];
-        nodes.SetCount(oldCount + points.Length);
-
-        // Load new points into buffer
-        for (int i = 0; i < points.Length; i++)
-        {
-            shiftBuffer[i] = points[i];
-        }
-        // Load shifted points from KD Tree after new points into buffer
-        for (int i = points.Length, j = splitIndex; i < shiftBuffer.Length; i++, j++)
-        {
-            shiftBuffer[i] = nodes.Points[j];
-        }
-        // Write buffer into KD Tree
-        for (int i = splitIndex, j = 0; i < nodes.Count; i++, j++)
-        {
-            nodes.Points[i] = shiftBuffer[j];
-        }
-        nodes.Rebuild();
-
-        if (debug == true)
-        {
-            Debug.Log("KDTree //nodes now contains " + points.Length + " new node(s) at index " + splitIndex + ". There are " + nodes.Count + " node(s) in total.");
-        }
-    }
-
-    void testRadiusFinder(int index)
-    {
-            var test = findInRadiusKDTree(index, searchRadius);
-            foreach ( var x in test)
-            {
-                Debug.Log( x.ToString());
-            }
-    }
-    
-        void RepulsiveNodes(float scaleFactor, float maximumDistance, float queryRadius)
-    {
-        float distance;
-        Vector3 currentToNext;
-
-        Vector3[] distanceCheckPoints = null;
-        for (int i = 0; i < nodes.Count; i++)
-        {
-            var resultIndices = new List<int>();
-            query.Radius(nodes, nodes.Points[0], queryRadius, resultIndices); // In KDTree: Search for points within given radius
-            if (resultIndices == null) return; // Skip if there are no points in radius proximity
-            distanceCheckPoints = new Vector3[resultIndices.Count]; // Create array to write results into
-            for (int j = 0; j < resultIndices.Count; j++)
-            {
-                distanceCheckPoints[j] = nodes.Points[resultIndices[j]]; // Write points into array
-                currentToNext = distanceCheckPoints[(j + 1) % resultIndices.Count] - nodes.Points[i];
-                distance = currentToNext.magnitude;
-                if (distance < maximumDistance)
-                {
-                    nodes.Points[i] = nodes.Points[i] + (-currentToNext.normalized) * (maximumDistance - distance);
-                    Debug.DrawRay(nodes.Points[i], currentToNext, Color.red, 1f);
-                }
-            }
-        }
-        nodes.Rebuild();
-    }
-    */
 }
