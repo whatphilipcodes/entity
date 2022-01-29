@@ -11,7 +11,7 @@ using Seed.Utilities;
 public class differentialGrowth : MonoBehaviour
 {
     ////////////////////////////////////////
-    // Notes on general stuff //
+    // Personal Notes //
     ////////////////////////////////////////
     
     // gameObject = current object, GameObject = class name
@@ -22,17 +22,23 @@ public class differentialGrowth : MonoBehaviour
     // The Debug class is very useful when developing complex vector calculations
     // see: https://docs.unity3d.com/ScriptReference/Debug.html
 
+    // lerp can be used in negative direction (Jason Webb -> https://github.com/jasonwebb/2d-differential-growth-experiments)
+
     ///////////////////////////////////////
 
     // Editor Input
     public int circleStartVerts = 8;
     public float circleRadius = 2;
-    public float attractionThreshhold = 0.8f;
+    public float growthRate = 2f;
+    public float desiredDistance = 0.8f;
+    public float splitDistance = 1;
+    public float attractionScale = 1;
     public float repulsionThreshhold = 0.8f;
-    public float forceScale = 1;
+    public float repulsionScale = 1;
     public float searchRadius = 0.8f;
     public bool skipNeighbor = true;
-    public int maxPointsPerLeafNode = 32; // KDTree Balance; Default is 32
+    public bool includeZ = false;
+    public int maxPointsPerLeafNode = 32; // KDTree Setting; Default is 32
     public bool debug;
     public float debugScale = 100;
 
@@ -44,7 +50,7 @@ public class differentialGrowth : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //Init
+        //Init main
         InitKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
         line = gameObject.GetComponent<LineRenderer>();
         query = new KDQuery();
@@ -54,6 +60,20 @@ public class differentialGrowth : MonoBehaviour
         {
             Debug.LogError("Please add Line Renderer to GameObject in Editor");
         }
+
+        //Init coroutines
+        StartCoroutine(Growth(growthRate));
+    }
+
+    // Node injection/growth
+    IEnumerator Growth (float growthRate)
+    {
+        while(true)
+        {
+            //print("coroutine iteration started");
+            SubdivideTarget (Random.Range(0,nodes.Count));
+            yield return new WaitForSeconds(growthRate);
+        }
     }
 
     // Update is called once per frame
@@ -61,18 +81,21 @@ public class differentialGrowth : MonoBehaviour
     {
         RenderLine();
 
-        // Growth loop
+        // Node manangement loop
         for (int i = 0; i < nodes.Count; i++)
         {
-            nodes.Points[i] += AttractionForceOnPoint(i, attractionThreshhold, forceScale);
-            nodes.Points[i] += RepulsionForceOnPoint(i, repulsionThreshhold, forceScale, skipNeighbor);
+            nodes.Points[i] += RepulsionForceOnPoint(i, repulsionThreshhold, repulsionScale, skipNeighbor);
+            nodes.Points[i] += AttractionForceOnPoint(i, desiredDistance, attractionScale);
         }
         nodes.Rebuild();
-        SubdivideTarget (Random.Range(0,nodes.Count));
 
-        if (Input.GetMouseButtonDown(0))
+        /*
+        // New node creation
+        if (Input.GetMouseButton(0))
         {
+            SubdivideTarget (Random.Range(0,nodes.Count));
         }
+        */
 
         // Debug area
         if ((debug == true) && (Input.GetKeyDown("space")))
@@ -122,15 +145,23 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-    Vector3 AttractionForceOnPoint(int index, float attractionThreshhold, float scaleFactor)
+    Vector3 AttractionForceOnPoint(int index, float desiredDistance, float scaleFactor)
     {
-        if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[(index + 1) % nodes.Count], Color.green);
+        //if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[(index + 1) % nodes.Count], Color.green);
 
-        Vector3 currentToNext = nodes.Points[(index + 1) % nodes.Count] - nodes.Points[index];
-        float distance = currentToNext.magnitude;
-        float amount = (distance - attractionThreshhold) * scaleFactor;
-        if (distance > attractionThreshhold)
+        //Vector3 currentToNext = nodes.Points[(index + 1) % nodes.Count] - nodes.Points[index];
+        float distance = Vector3.Distance(nodes.Points[(index + 1) % nodes.Count],nodes.Points[index]);
+
+        float amount = (distance - desiredDistance) * scaleFactor;
+        if (distance > desiredDistance)
         {
+            if (distance > splitDistance)
+            {
+            //Vector3 newPoint = nodes.Points[index] + currentToNext / 2;
+            //InjectNodeToKDTree(newPoint, index);
+            SubdivideTarget(index);
+            }
+            Vector3 currentToNext = nodes.Points[(index + 1) % nodes.Count] - nodes.Points[index];
             return currentToNext.normalized * amount;
         } else {
             return new Vector3();
@@ -153,7 +184,8 @@ public class differentialGrowth : MonoBehaviour
                 float currentDistance = currentDirection.magnitude;
                 if (currentDistance < repulsionThreshhold)
                 {
-                    directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    if (includeZ == true) directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    else directionSum = Vector2.Lerp(directionSum, currentDirection, 0.5f);
                     forceSum += repulsionThreshhold - currentDistance;
                 }
             } else if (skipNeighbor == false) {
@@ -162,7 +194,8 @@ public class differentialGrowth : MonoBehaviour
                 float currentDistance = currentDirection.magnitude;
                 if (currentDistance < repulsionThreshhold)
                 {
-                    directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    if (includeZ == true) directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    else directionSum = Vector2.Lerp(directionSum, currentDirection, 0.5f);
                     forceSum += repulsionThreshhold - currentDistance;
                 }
             }
@@ -181,12 +214,14 @@ public class differentialGrowth : MonoBehaviour
         return resultIndices;
     }
 
-    void SubdivideTarget(int splitIndex) // must work for 0 - nodes.Count as splitIndex
+    void SubdivideTarget(int splitIndex)
     {
-        int nextIndex = (splitIndex + 1) % nodes.Count; // catches values equal to nodes.Count
+        int nextIndex = (splitIndex + 1) % nodes.Count; // catches values greater than nodes.Count and restarts at index 0
         //print(splitIndex + " / " + nextIndex);
-        Vector3 currentToNext = nodes.Points[nextIndex] - nodes.Points[splitIndex];
-        Vector3 midPoint = nodes.Points[splitIndex] + currentToNext.normalized * (currentToNext.magnitude/2);
+        //Vector3 currentToNext = nodes.Points[nextIndex] - nodes.Points[splitIndex];
+        //Vector3 midPoint = nodes.Points[splitIndex] + currentToNext.normalized * (currentToNext.magnitude/2);
+        Vector3 midPoint = (nodes.Points[splitIndex] + nodes.Points[nextIndex]) / 2;
+        if (debug == true) Debug.DrawLine(new Vector3(0,0,0), midPoint, Color.magenta, 1f);
         InjectNodeToKDTree(midPoint, nextIndex);
     }
 

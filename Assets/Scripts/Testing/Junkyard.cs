@@ -1,4 +1,4 @@
-// Code snippets that aren't useful but I was to scared to get rid off
+// Code snippets that aren't useful anymore but I was to scared to get rid off
 //////////////////////////////////////////////////////////////////////
 /*
 
