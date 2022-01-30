@@ -17,18 +17,18 @@ public class Texture2DEditor : MonoBehaviour
         RawImage rawImage = GetComponent<RawImage> ();
         t2D = rawImage.texture as Texture2D;
         //InitGetMousePosition(rawImage);
-        //ColorPicker();
-        ClearTexture();
+        ColorPicker();
+        //ClearTexture();
     }
 
     void Update()
     {
         //GetMousePosition();
-        if (Input.GetMouseButtonDown(0))
+        /*if (Input.GetMouseButtonDown(0))
         {
             DrawLine();
         }
-        t2D.Apply();
+        t2D.Apply();*/
     }
 
     void ClearTexture()

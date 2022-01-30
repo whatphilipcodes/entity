@@ -17,6 +17,7 @@ public class FileManager : MonoBehaviour
     int y = 1;
     string[] pathname = null;
         
+    [SerializeField]
     Texture2D t2D;
     
 
@@ -32,7 +33,26 @@ public class FileManager : MonoBehaviour
 
     void Update() 
     {
-        StartCoroutine(FileWatching(path, rawImage, y, pathname, t2D));
+        System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo("/Users/laraketzenberg/Desktop/VisitorScans");
+        int count = dir.GetFiles().Length;
+        //Debug.Log(count);
+        
+        if(y != count)
+        {
+            pathname = Directory.GetFiles("/Users/laraketzenberg/Desktop/VisitorScans");
+            //Debug.Log(pathname[0]); //.DS_Store??
+            path = pathname[1]; //Xchange to 0 if ".DS_Store" is not in Folder
+            Debug.Log(path);
+            StartCoroutine(GetTexture());
+
+            string sourceFile = path;
+            string destinationFile = "/Users/laraketzenberg/Desktop/VisitorScans/Benutzt/";
+            // To move a file or folder to a new location:
+            System.IO.File.Move(sourceFile, destinationFile + Path.GetFileName(path));
+            count = dir.GetFiles().Length;
+            //ColorPicker();
+            y = count;
+        }
     }
 
     /*public void OpenFileExplorer()
@@ -40,11 +60,9 @@ public class FileManager : MonoBehaviour
         path = EditorUtility.OpenFilePanel("VisitorScans (.png)", "/Users/laraketzenberg/Desktop/VisitorScans", "png"); // EXCHANGE "FILENAME" AND "FILEPATH"
         StartCoroutine(GetTexture());
     }*/
-
-    /*
     IEnumerator GetTexture()
     {
-        UnityWebRequest www = UnityWebRequestTexture.GetTexture("file:///" + path);
+        UnityWebRequest www = UnityWebRequestTexture.GetTexture("file://" + path);
 
         yield return www.SendWebRequest();
 
@@ -56,43 +74,6 @@ public class FileManager : MonoBehaviour
         {
             Texture2D myTexture = ((DownloadHandlerTexture)www.downloadHandler).texture;
             rawImage.texture = myTexture;
-        }
-    }*/
-
-    IEnumerator FileWatching(string path, RawImage rawImage, int y, string[] pathname, Texture2D t2D)
-    {
-        System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo("/Users/laraketzenberg/Desktop/VisitorScans");
-        int count = dir.GetFiles().Length;
-        //Debug.Log(count);
-        
-        if(y != count)
-        {
-            pathname = Directory.GetFiles("/Users/laraketzenberg/Desktop/VisitorScans");
-            //Debug.Log(pathname[0]); //.DS_Store??
-            path = pathname[1]; //Xchange to 0 if ".DS_Store" is not in Folder
-            Debug.Log(path);
-            UnityWebRequest www = UnityWebRequestTexture.GetTexture("file:///" + path);
-
-            yield return www.SendWebRequest();
-
-            if(www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
-                {
-                    Debug.Log(www.error);
-                }
-            else
-                {
-                    Texture2D myTexture = ((DownloadHandlerTexture)www.downloadHandler).texture;
-                    t2D = myTexture;
-                    rawImage.texture = myTexture;
-                }
-
-            string sourceFile = path;
-            string destinationFile = "/Users/laraketzenberg/Desktop/VisitorScans/Benutzt/";
-            // To move a file or folder to a new location:
-            System.IO.File.Move(sourceFile, destinationFile + Path.GetFileName(path));
-            count = dir.GetFiles().Length;
-            ColorPicker(); // nicht vor System.IO.File.Move setzen
-            y = count;
         }
     }
 
