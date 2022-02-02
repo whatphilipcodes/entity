@@ -9,6 +9,14 @@ using System;
 
 public class FileManager : MonoBehaviour
 {
+    [SerializeField]
+    bool alphaIsTransparency, isReadable;
+    [SerializeField]
+    TextureImporterNPOTScale npotScale;
+    [SerializeField]
+    TextureWrapMode wrapMode;
+    [SerializeField]
+    FilterMode filterMode;
     string path;
     [SerializeField]
     RawImage rawImage;
@@ -50,6 +58,8 @@ public class FileManager : MonoBehaviour
 
         yield return www.SendWebRequest();
 
+        TextureSettings();
+
         if(www.result == UnityWebRequest.Result.ConnectionError || www.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.Log(www.error);
@@ -59,5 +69,13 @@ public class FileManager : MonoBehaviour
             Texture2D myTexture = ((DownloadHandlerTexture)www.downloadHandler).texture;
             rawImage.texture = myTexture;
         }
+    }
+    void TextureSettings() // in Filemanager
+    {
+        alphaIsTransparency = true;
+        npotScale = TextureImporterNPOTScale.None;
+        isReadable = true;
+        wrapMode = TextureWrapMode.Clamp;
+        filterMode = FilterMode.Point;
     }
 }
