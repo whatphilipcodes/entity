@@ -174,7 +174,7 @@ MonoBehaviour:
   desiredDistance: 0.5
   maxDistance: 0.5
   minDistance: 0.01
-  kdSearchRadius: 0.08
+  kdSearchRadius: 0.2
   attractionForce: 0.1
   repulsionForce: 0.1
   alignmentForce: 1

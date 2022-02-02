@@ -259,7 +259,7 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0.009
   scatter:
     m_OverrideState: 0
     m_Value: 0.7
@@ -299,7 +299,7 @@ MonoBehaviour:
   active: 0
   skyType:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 3
   cloudType:
     m_OverrideState: 0
     m_Value: 0
@@ -330,7 +330,7 @@ MonoBehaviour:
   active: 0
   mode:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   meteringMode:
     m_OverrideState: 0
     m_Value: 2
@@ -338,8 +338,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   fixedExposure:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 4.7929006
   compensation:
     m_OverrideState: 0
     m_Value: 0
