@@ -715,6 +715,7 @@ MonoBehaviour:
   wrapMode: 0
   filterMode: 0
   rawImage: {fileID: 637077296}
+  folderpath: /Users/laraketzenberg/Desktop/VisitorScans
 --- !u!4 &1902122221
 Transform:
   m_ObjectHideFlags: 0

@@ -23,27 +23,31 @@ public class FileManager : MonoBehaviour
     int y = 1;
     string[] pathname = null;
 
+    [SerializeField]
+    string folderpath;
+    
     void Start()
     {
-        
+        Directory.CreateDirectory(folderpath + "/Benutzt/");
     }
 
     void Update() 
     {
-        System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo("/Users/laraketzenberg/Desktop/VisitorScans");
+        System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(folderpath);
+        
         int count = dir.GetFiles().Length;
         //Debug.Log(count);
         
         if(y != count)
         {
-            pathname = Directory.GetFiles("/Users/laraketzenberg/Desktop/VisitorScans");
+            pathname = Directory.GetFiles(folderpath);
             //Debug.Log(pathname[0]); //.DS_Store??
             path = pathname[1]; //Xchange to 0 if ".DS_Store" is not in Folder
             Debug.Log(path);
             StartCoroutine(GetTexture());
 
             string sourceFile = path;
-            string destinationFile = "/Users/laraketzenberg/Desktop/VisitorScans/Benutzt/";
+            string destinationFile = (folderpath + "/Benutzt/");
             // To move a file or folder to a new location:
             System.IO.File.Move(sourceFile, destinationFile + Path.GetFileName(path));
             count = dir.GetFiles().Length;

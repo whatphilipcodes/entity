@@ -10,29 +10,42 @@ using Seed.Utilities;
 
 public class differentialGrowth : MonoBehaviour
 {
+    ////////////////////////////////////////
+    // Personal Notes //
+    ////////////////////////////////////////
+    
+    // gameObject = current object, GameObject = class name
+
+    // wrap loop indices exceeding array length (tested on for) using modulo [%] operator ! See wrappedIndexTest.cs
+    // use cutom Utils.mod() method to handle negative [-i] indices ! See helperFunctions.cs
+
+    // The Debug class is very useful when developing complex vector calculations
+    // see: https://docs.unity3d.com/ScriptReference/Debug.html
+
+    // lerp can be used in negative direction (Jason Webb -> https://github.com/jasonwebb/2d-differential-growth-experiments)
+
+    ///////////////////////////////////////
+
     // Editor Input
-    [SerializeField]
-    int circleStartVerts = 8;
+    public int circleStartVerts = 8;
+    public float circleRadius = 2;
+    public float growthRate = 2f;
+    public float desiredDistance = 0.8f;
+    public float splitDistance = 1;
+    public float attractionScale = 1;
+    public float repulsionThreshhold = 0.8f;
+    public float repulsionScale = 1;
+    public float searchRadius = 0.8f;
+    public bool skipNeighbor = true;
+    public bool includeZ = false;
+    public int maxPointsPerLeafNode = 32; // KDTree Setting; Default is 32
+    public bool debug;
+    public float debugScale = 100;
 
-    [SerializeField]
-    float circleRadius = 2, growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1,
-    minDistance = 0.8f, kdSearchRadius = 0.8f;
-
-    [SerializeField][Range(0f, 1)]
-    float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
-
-    [SerializeField]
-    bool /*skipNeighbor = false, includeZ = false, */loop = false, pruneNodes = false, debug = false;
-
-    // KDTree Setting; Default is 32
-    int maxPointsPerLeafNode = 32;
-
-    // Public Vars
-    public static KDTree nodes;
-
-    // Private Vars
-    private KDQuery query;
-    private LineRenderer line;
+    // Global Vars
+    KDTree nodes;
+    KDQuery query;
+    LineRenderer line;
 
     // Start is called before the first frame update
     void Start()
@@ -40,7 +53,6 @@ public class differentialGrowth : MonoBehaviour
         //Init main
         InitKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
         line = gameObject.GetComponent<LineRenderer>();
-        line.loop = loop;
         query = new KDQuery();
 
         //Check Resources
@@ -67,26 +79,29 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        RenderLine();
 
         // Node manangement loop
         for (int i = 0; i < nodes.Count; i++)
         {
-            nodes.Points[i] += AttractionForceOnPoint(i, desiredDistance, attractionForce);
-            nodes.Points[i] += RepulsionForceOnPoint(i, repulsionForce);
-            nodes.Points[i] += AlignmentForceOnPoint(i, alignmentForce);
-            SplitEdges(i);
-            if (pruneNodes == true) PruneNodes(i);
-            }
+            nodes.Points[i] += RepulsionForceOnPoint(i, repulsionThreshhold, repulsionScale, skipNeighbor);
+            nodes.Points[i] += AttractionForceOnPoint(i, desiredDistance, attractionScale);
+        }
         nodes.Rebuild();
+
+        /*
+        // New node creation
+        if (Input.GetMouseButton(0))
+        {
+            SubdivideTarget (Random.Range(0,nodes.Count));
+        }
+        */
 
         // Debug area
         if ((debug == true) && (Input.GetKeyDown("space")))
         {
             Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") node(s)."  );
         }
-
-        // Draw
-        RenderLine();
     }
 
     Vector3[] InitStartCircle(float x, float y, float z, float radius, int verts)
@@ -130,117 +145,66 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-    Vector3 AttractionForceOnPoint(int index, float desiredDistance, float force)
+    Vector3 AttractionForceOnPoint(int index, float desiredDistance, float scaleFactor)
     {
-        force *= 0.5f;
-        float distance2next;
-        float distance2prev;
-        Vector3 currentNode = nodes.Points[index];
-        Vector3 diff2next = Vector3.zero;
-        Vector3 diff2prev = Vector3.zero;
+        //if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[(index + 1) % nodes.Count], Color.green);
 
-        if (loop == true)
+        //Vector3 currentToNext = nodes.Points[(index + 1) % nodes.Count] - nodes.Points[index];
+        float distance = Vector3.Distance(nodes.Points[(index + 1) % nodes.Count],nodes.Points[index]);
+
+        float amount = (distance - desiredDistance) * scaleFactor;
+        if (distance > desiredDistance)
         {
-            distance2next = Vector3.Distance(currentNode, nodes.Points[(index + 1) % nodes.Count]);
-            if (distance2next > desiredDistance)
+            if (distance > splitDistance)
             {
-                Vector3 newPoint = Vector2.Lerp(currentNode, nodes.Points[(index + 1) % nodes.Count], force);
-                diff2next = newPoint - currentNode;
+            //Vector3 newPoint = nodes.Points[index] + currentToNext / 2;
+            //InjectNodeToKDTree(newPoint, index);
+            SubdivideTarget(index);
             }
-            distance2prev = Vector3.Distance(currentNode, nodes.Points[Utils.mod((index - 1), nodes.Count)]);
-            if (distance2prev > desiredDistance)
-            {
-                Vector3 newPoint = Vector2.Lerp(currentNode, nodes.Points[Utils.mod((index - 1), nodes.Count)], force);
-                diff2prev = newPoint - currentNode;
-            }
+            Vector3 currentToNext = nodes.Points[(index + 1) % nodes.Count] - nodes.Points[index];
+            return currentToNext.normalized * amount;
+        } else {
+            return new Vector3();
         }
-        else if (index + 1 < nodes.Count)
-        {
-            distance2next = Vector3.Distance(currentNode, nodes.Points[index + 1]);
-            if (distance2next > desiredDistance)
-            {
-                Vector3 newPoint = Vector2.Lerp(currentNode, nodes.Points[index + 1], force);
-                diff2next = newPoint - currentNode;
-            }
-        }
-        else if (index - 1 >= 0)
-        {
-            distance2prev = Vector3.Distance(currentNode, nodes.Points[index - 1]);
-            if (distance2prev > desiredDistance)
-            {
-                Vector3 newPoint = Vector2.Lerp(currentNode, nodes.Points[index - 1], force);
-                diff2prev = newPoint - currentNode;
-            }
-        }
-        Vector3 displacement = diff2next + diff2prev;
-        return displacement;
     }
 
-    Vector3 RepulsionForceOnPoint(int index, float force)
+    Vector3 RepulsionForceOnPoint(int index, float repulsionThreshhold, float scaleFactor , bool skipNeighbor)
     {
-        force *= -0.5f; // repulsion through negative lerp factor -> unclamped
-        var resultIndices = findInRadiusKDTree(index, kdSearchRadius);
-        Vector3 newPoint = nodes.Points[index];
+        var resultIndices = findInRadiusKDTree(index, searchRadius);
+        float forceSum = 0f;
+        Vector3 directionSum = new Vector3();
 
         for (int i = 0; i < resultIndices.Count; i++)
         {
-            newPoint = Vector2.LerpUnclamped(newPoint, nodes.Points[resultIndices[i]], force);
-        }
-        Vector3 displacement = newPoint - nodes.Points[index];
-        return displacement;
-    }
-
-    Vector3 AlignmentForceOnPoint(int index, float force)
-    {
-        force *= 0.5f;
-        Vector3 displacement = Vector3.zero;
-        Vector3 currentNode = nodes.Points[index];
-
-        if (loop == true)
-        {
-            Vector3 midPoint = (nodes.Points[Utils.mod((index - 1),nodes.Count)] + nodes.Points[(index + 1) % nodes.Count]) / 2;
-            Vector3 newPoint = Vector2.Lerp(currentNode, midPoint, force);
-            displacement = newPoint - currentNode;
-        }
-        else if (index - 1 >= 0 && index + 1 < nodes.Count )
-        {
-            Vector3 midPoint = (nodes.Points[index - 1] + nodes.Points[index + 1]) / 2;
-            Vector3 newPoint = Vector2.Lerp(currentNode, midPoint, force);
-            displacement = newPoint - currentNode;
-        }
-        return displacement;
-    }
-
-    void SplitEdges(int index)
-    {
-        if (loop == true)
-        {
-            float distance = Vector3.Distance(nodes.Points[index], nodes.Points[Utils.mod((index - 1),nodes.Count)]);
-            if (distance > maxDistance)
+             Vector3 currentDirection = new Vector3();
+            if (skipNeighbor == true && resultIndices[i] != Utils.mod((index - 1), nodes.Count) && resultIndices[i] != (index + 1) % nodes.Count)
             {
-                SubdivideTarget(index);
+                if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[resultIndices[i]], Color.cyan);
+                currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
+                float currentDistance = currentDirection.magnitude;
+                if (currentDistance < repulsionThreshhold)
+                {
+                    if (includeZ == true) directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    else directionSum = Vector2.Lerp(directionSum, currentDirection, 0.5f);
+                    forceSum += repulsionThreshhold - currentDistance;
+                }
+            } else if (skipNeighbor == false) {
+                if (debug == true) Debug.DrawLine(nodes.Points[index], nodes.Points[resultIndices[i]], Color.cyan);
+                currentDirection = -(nodes.Points[resultIndices[i]] - nodes.Points[index]);
+                float currentDistance = currentDirection.magnitude;
+                if (currentDistance < repulsionThreshhold)
+                {
+                    if (includeZ == true) directionSum = Vector3.Slerp(directionSum, currentDirection, 0.5f);
+                    else directionSum = Vector2.Lerp(directionSum, currentDirection, 0.5f);
+                    forceSum += repulsionThreshhold - currentDistance;
+                }
             }
         }
-        else if (index - 1 >= 0)
-        {
-            float distance = Vector3.Distance(nodes.Points[index], nodes.Points[index - 1]);
-            if (distance > maxDistance)
-            {
-                SubdivideTarget(index);
-            }
-        }
-    }
-
-    void PruneNodes(int index)
-    {
-        if (index - 1 >= 0)
-        {
-            float distance = Vector3.Distance(nodes.Points[index], nodes.Points[index - 1]);
-            if (distance < minDistance)
-            {
-                EjectNodeFromKDTree(index);
-            }
-        }
+        forceSum -= repulsionThreshhold;
+        Vector3 resultForce = new Vector3();
+        resultForce = directionSum.normalized * (forceSum * scaleFactor);
+        if (debug == true) Debug.DrawRay(nodes.Points[index], resultForce * debugScale, Color.red);
+        return resultForce;
     }
 
     List<int> findInRadiusKDTree(int index, float radius)
@@ -253,6 +217,9 @@ public class differentialGrowth : MonoBehaviour
     void SubdivideTarget(int splitIndex)
     {
         int nextIndex = (splitIndex + 1) % nodes.Count; // catches values greater than nodes.Count and restarts at index 0
+        //print(splitIndex + " / " + nextIndex);
+        //Vector3 currentToNext = nodes.Points[nextIndex] - nodes.Points[splitIndex];
+        //Vector3 midPoint = nodes.Points[splitIndex] + currentToNext.normalized * (currentToNext.magnitude/2);
         Vector3 midPoint = (nodes.Points[splitIndex] + nodes.Points[nextIndex]) / 2;
         if (debug == true) Debug.DrawLine(new Vector3(0,0,0), midPoint, Color.magenta, 1f);
         InjectNodeToKDTree(midPoint, nextIndex);
@@ -276,29 +243,11 @@ public class differentialGrowth : MonoBehaviour
         {
             nodes.Points[i] = shiftBuffer[j];
         }
-        //nodes.Rebuild();
+        nodes.Rebuild();
 
         if (debug == true)
         {
             Debug.Log("KDTree //nodes now contains a new node " + point + " at index " + nextIndex + ". There are " + nodes.Count + " node(s) in total.");
         }
-    }
-
-    void EjectNodeFromKDTree (int index)
-    {
-        int oldCount = nodes.Count;
-        Vector3[] shiftBuffer = new Vector3[oldCount - 1 - index];
-
-        for (int i = 0, j = index; i < shiftBuffer.Length; i++, j++)
-        {
-            shiftBuffer[i] = nodes.Points[j];
-        }
-        for (int i = index - 1, j = 0; j < shiftBuffer.Length; i++, j++)
-        {
-            print(i + " | " + j);
-            nodes.Points[i] = shiftBuffer[j];
-        }
-        nodes.SetCount(oldCount - 1);
-        //nodes.Rebuild();
     }
 }
