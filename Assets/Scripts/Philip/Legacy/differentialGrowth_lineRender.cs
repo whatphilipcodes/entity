@@ -8,7 +8,7 @@ using DataStructures.ViliWonka.KDTree;
 // Enable Helpers
 using Seed.Utilities;
 
-public class differentialGrowth : MonoBehaviour
+public class differentialGrowth_lineRender : MonoBehaviour
 {
     // Editor Input
     [SerializeField]
@@ -32,13 +32,22 @@ public class differentialGrowth : MonoBehaviour
 
     // Private Vars
     private KDQuery query;
+    private LineRenderer line;
 
     // Start is called before the first frame update
     void Start()
     {
         //Init main
         InitKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
+        line = gameObject.GetComponent<LineRenderer>();
+        line.loop = loop;
         query = new KDQuery();
+
+        //Check Resources
+        if (line == null)
+        {
+            Debug.LogError("Please add Line Renderer to GameObject in Editor");
+        }
 
         //Init coroutines
         StartCoroutine(Growth(growthRate));
@@ -75,6 +84,9 @@ public class differentialGrowth : MonoBehaviour
         {
             Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") node(s)."  );
         }
+
+        // Draw
+        RenderLine();
     }
 
     Vector3[] InitStartCircle(float x, float y, float z, float radius, int verts)
@@ -106,6 +118,15 @@ public class differentialGrowth : MonoBehaviour
         if (debug == true)
         {
             Debug.Log("KDTree //nodes now contains " + nodes.Count + " node(s)");
+        }
+    }
+
+    void RenderLine()
+    {
+        line.positionCount = nodes.Points.Length;
+        for (int i = 0; i < line.positionCount; i++)
+        {
+            line.SetPosition(i, nodes.Points[i]);
         }
     }
 
