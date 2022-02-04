@@ -25,6 +25,9 @@ public class FileManager : MonoBehaviour
 
     [SerializeField]
     string folderpath;
+    //[SerializeField]
+    //string firstFilePath;
+    
     
     void Start()
     {
@@ -41,15 +44,14 @@ public class FileManager : MonoBehaviour
         if(y != count)
         {
             pathname = Directory.GetFiles(folderpath);
-            //Debug.Log(pathname[0]); //.DS_Store??
-            path = pathname[1]; //Xchange to 0 if ".DS_Store" is not in Folder
+            path = pathname[1];
             Debug.Log(path);
             StartCoroutine(GetTexture());
 
             string sourceFile = path;
-            string destinationFile = (folderpath + "/Benutzt/");
+            string destinationFile = (folderpath + "/Benutzt/" + "/Visitor" + DateTime.Now.ToFileTime() + ".jpg");
             // To move a file or folder to a new location:
-            System.IO.File.Move(sourceFile, destinationFile + Path.GetFileName(path));
+            System.IO.File.Move(sourceFile, destinationFile);
             count = dir.GetFiles().Length;
             
             y = count;
