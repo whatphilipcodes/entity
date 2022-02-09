@@ -1,0 +1,65 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel renderCanvas
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+// texture
+shared RWTexture2D<float4> Result;
+int texResolution;
+
+// buffer
+StructuredBuffer<float2> positionsBuffer;
+
+// properties
+float4 _lcol;
+float4 _bgcol;
+
+float2 _a;
+float2 _b;
+
+float _thick;
+float _crisp;
+
+// Returns pseudo random number in range 0 <= x < 1
+float random(float value, float seed = 0.546){
+	float random = (frac(sin(value + seed) * 143758.5453));// + 1.0)/2.0;
+	return random;
+}
+
+float2 random2(float value){
+	return float2(
+		random(value, 3.9812),
+		random(value, 7.1536)
+	);
+}
+///////////////
+
+// Line Segment Functions (NedMakesGames)
+#ifndef LINE_SEGMENT_2D_SDF_DEFINED
+#define LINE_SEGMENT_2D_SDF_DEFINED
+float LineSegment2DSDF(float2 p, float2 a, float2 b)
+{
+    float2 ba = b - a;
+    float2 pa = p - a;
+    float k = saturate(dot(pa, ba) / dot(ba, ba));
+    return length(pa - ba * k);
+}
+#endif
+
+float DrawLine(float2 i, float2 a, float2 b, float thick, float crisp)
+{
+    float ct = thick + crisp;
+    float d = LineSegment2DSDF(i,a,b);
+    float o = smoothstep(thick, ct, d);
+    return 1 - o;
+}
+///////////////
+
+[numthreads(8,8,1)]
+void renderCanvas (uint3 id : SV_DispatchThreadID)
+{
+    float l = DrawLine(id.xy, _a, _b, _thick, _crisp);
+    float4 col = lerp(_bgcol, _lcol, l);
+    Result[id.xy] = col;
+}

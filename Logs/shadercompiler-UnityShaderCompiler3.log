@@ -1,0 +1,10 @@
+Base path: '/Applications/2021.2.8f1/Unity.app/Contents', plugins path '/Applications/2021.2.8f1/Unity.app/Contents/PlaybackEngines'
+Cmd: initializeCompiler
+
+Cmd: compileComputeKernel
+  insize=1171 file=/Users/philip/Documents/Unity Projects/seed/Assets/COMPUTE/renderCanvas.compute kernel=Clear cachingPP=1 ppOnly=0 stripLineD=0 buildPlatform=2 km=<UNITY_VERSION=202128> pKW=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR uKW=SHADER_STAGE_COMPUTE platform=metal flags=4096 reqs=16385 forceDXC=0 forceFXC=0  error: 2 plat 14 at renderCanvas.compute(9): syntax error: unexpected token 'Vector2'
+ ok=0 outsize=0
+
+Cmd: compileComputeKernel
+  insize=1482 file=/Users/philip/Documents/Unity Projects/seed/Assets/COMPUTE/renderCanvas.compute kernel=renderCanvas cachingPP=1 ppOnly=0 stripLineD=0 buildPlatform=2 km=<UNITY_VERSION=202128> pKW=UNITY_ENABLE_REFLECTION_BUFFERS UNITY_USE_DITHER_MASK_FOR_ALPHABLENDED_SHADOWS UNITY_PBS_USE_BRDF1 UNITY_SPECCUBE_BOX_PROJECTION UNITY_SPECCUBE_BLENDING UNITY_ENABLE_DETAIL_NORMALMAP SHADER_API_DESKTOP UNITY_LIGHT_PROBE_PROXY_VOLUME UNITY_LIGHTMAP_FULL_HDR uKW=SHADER_STAGE_COMPUTE platform=metal flags=4096 reqs=16385 forceDXC=0 forceFXC=0 ok=1 outsize=1809
+
