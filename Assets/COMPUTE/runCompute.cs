@@ -7,31 +7,19 @@ public class runCompute : MonoBehaviour
     [SerializeField] int texResolution = 1024;
     [SerializeField] ComputeShader shader;
     [SerializeField] Material target;
-    [SerializeField] Color lineColor = new Color(1,1,1,1);
-    [SerializeField] Vector2 pointA = new Vector2 (0.2f, 0.2f);
-    [SerializeField] Vector2 pointB = new Vector2 (0.8f, 0.8f);
-    [SerializeField] float thickness = 0.1f;
-    [SerializeField] float crispness = 0f;
+    [SerializeField] Color pointColor = new Color(1,1,1,1);
 
     // ShaderData
-    
     int dispatchSet;
     int renderHandle;
     RenderTexture outputTexture;
-
-    // BufferData
     ComputeBuffer buffer;
-    Vector2[] testData;
-    
+    Vector2[] pointsData;
+
+
     // Use this for initialization
     void Start()
     {
-        testData = new Vector2[4];
-        testData[0] = new Vector2 (0.2f, 0.2f);
-        testData[1] = new Vector2 (0.2f, 0.8f);
-        testData[2] = new Vector2 (0.8f, 0.8f);
-        testData[3] = new Vector2 (0.8f, 0.2f);
-
         outputTexture = new RenderTexture(texResolution, texResolution, 0);
         outputTexture.enableRandomWrite = true;
         outputTexture.filterMode = FilterMode.Point;
@@ -60,21 +48,26 @@ public class runCompute : MonoBehaviour
 
         dispatchSet = (int) (texResolution / threadGroupSizeX);
         //print(dispatchSet);
+
+        pointsData = new Vector2[10000];
+
+        //test setup
+        for (int i = 0; i < pointsData.Length; i++)
+        {
+            pointsData[i] = new Vector2(Random.Range(0,texResolution), Random.Range(0,texResolution));
+        }
+        print(pointsData[9999]);
     }
 
     private void InitShader()
     {
-        shader.SetVector( "_lcol", lineColor );
-        shader.SetFloat( "_thick", thickness);
-        shader.SetFloat( "_crisp", crispness );
-        shader.SetVector( "_a", pointA );
-        shader.SetVector( "_b", pointB );
+        shader.SetVector( "_pcol", pointColor );
         shader.SetInt( "texResolution", texResolution );
 
-        int stride = 2 * 4; //2 floats position vector - 4 bytes per float
-        buffer = new ComputeBuffer(testData.Length, stride);
-        buffer.SetData(testData);
-        shader.SetBuffer(renderHandle, "positionsBuffer", buffer);
+        int stride = (2) * 4; //2 floats in each vector - 4 bytes per float
+        buffer = new ComputeBuffer(pointsData.Length, stride);
+        buffer.SetData(pointsData);
+        shader.SetBuffer(renderHandle, "pointsBuffer", buffer);
 
         shader.SetTexture( renderHandle, "Result", outputTexture );
         target.SetTexture("_MainTex", outputTexture); // sets output render texture into target material

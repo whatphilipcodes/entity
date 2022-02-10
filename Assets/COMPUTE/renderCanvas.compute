@@ -7,19 +7,10 @@
 // texture
 shared RWTexture2D<float4> Result;
 int texResolution;
+float4 _pcol;
 
 // buffer
-StructuredBuffer<float2> positionsBuffer;
-
-// properties
-float4 _lcol;
-float4 _bgcol;
-
-float2 _a;
-float2 _b;
-
-float _thick;
-float _crisp;
+StructuredBuffer<float2> pointsBuffer;
 
 // Returns pseudo random number in range 0 <= x < 1
 float random(float value, float seed = 0.546){
@@ -56,10 +47,11 @@ float DrawLine(float2 i, float2 a, float2 b, float thick, float crisp)
 }
 ///////////////
 
-[numthreads(8,8,1)]
+[numthreads(8,8,1)] // x*y*z must be < 1024
 void renderCanvas (uint3 id : SV_DispatchThreadID)
 {
-    float l = DrawLine(id.xy, _a, _b, _thick, _crisp);
-    float4 col = lerp(_bgcol, _lcol, l);
-    Result[id.xy] = col;
+    /*
+    float l = DrawLine(id.xy, linesBuffer[id.z]._start, linesBuffer[id.z]._end, _thick, _crisp);
+    if (l > 0) Result[id.xy] = lerp(float4(0,0,0,0), _lcol, l);
+    */
 }

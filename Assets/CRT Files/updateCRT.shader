@@ -10,8 +10,8 @@ Shader "CustomRenderTexture/updateCRT"
         _bgcol("BG Color", Color) = (0,0,0,0)
         _lcol("Line Color", Color) = (1,1,1,1)
 
-        //_Coordinate("Coordinate", Vector) = (0.0,0.5,0,0)
-        //_Color("Draw Color", Color) = (1,0,0,0)
+        _Coordinate("Coordinate", Vector) = (0.0,0.5,0,0)
+        _Color("Draw Color", Color) = (1,0,0,0)
      }
 
      SubShader
@@ -51,8 +51,8 @@ Shader "CustomRenderTexture/updateCRT"
             ///////////////
 
             sampler2D   _MainTex;
-            //float4      _Coordinate;
-            //float4      _Color;
+            float4      _Coordinate;
+            float4      _Color;
 
             // SDF values
             float2 _a;
@@ -66,7 +66,7 @@ Shader "CustomRenderTexture/updateCRT"
             //////////////
 
             float4 frag(v2f_customrendertexture IN) : COLOR
-            {
+            {   /*
                 float2 uv = IN.localTexcoord.xy;
                 float4 lastFrame = tex2D(_SelfTexture2D, uv);
 
@@ -74,18 +74,16 @@ Shader "CustomRenderTexture/updateCRT"
                 float4 col = lerp(_bgcol, _lcol, l);
                 return col;
                 //return col + lastFrame;
-                
+                */
                 // _MainTex_TexelSize -> Vector4(1 / width, 1 / height, width, height)
                 // https://docs.unity3d.com/2021.2/Documentation/Manual/SL-PropertiesInPrograms.html
-
-                /*
+                
                 float2 uv = IN.localTexcoord.xy;
 
                 float4 lastFrame = tex2D(_SelfTexture2D, uv);
                 float draw = pow(saturate(1 - distance(uv, _Coordinate.xy)), 200);
                 float4 drawcol = _Color * (draw * 1);
                 return smoothstep(0,1,lastFrame + drawcol);
-                */
             }
             ENDCG
         }
