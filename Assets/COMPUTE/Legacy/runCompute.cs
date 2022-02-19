@@ -16,6 +16,8 @@ public class runCompute : MonoBehaviour
     ComputeBuffer buffer;
     Vector2[] pointsData;
 
+    public differentialGrowth diffGrowth;
+
 
     // Use this for initialization
     void Start()
@@ -49,14 +51,16 @@ public class runCompute : MonoBehaviour
         dispatchSet = (int) (texResolution / threadGroupSizeX);
         //print(dispatchSet);
 
-        pointsData = new Vector2[10000];
+        pointsData = new Vector2[6400];
 
+        //print(diffGrowth.nodes.Points[0]);
         //test setup
-        for (int i = 0; i < pointsData.Length; i++)
+        for (int i = 0; i < 6400; i++)
         {
             pointsData[i] = new Vector2(Random.Range(0,texResolution), Random.Range(0,texResolution));
+            //pointsData[i] = new Vector2(diffGrowth.nodes.Points[i].x,diffGrowth.nodes.Points[i].y);
         }
-        print(pointsData[9999]);
+        //print(pointsData[6399]);
     }
 
     private void InitShader()
@@ -64,9 +68,9 @@ public class runCompute : MonoBehaviour
         shader.SetVector( "_pcol", pointColor );
         shader.SetInt( "texResolution", texResolution );
 
-        int stride = (2) * 4; //2 floats in each vector - 4 bytes per float
-        buffer = new ComputeBuffer(pointsData.Length, stride);
-        buffer.SetData(pointsData);
+        int stride = (3) * 4; //2 floats in each vector - 4 bytes per float
+        buffer = new ComputeBuffer(4096, stride);
+        //buffer.SetData(null);
         shader.SetBuffer(renderHandle, "pointsBuffer", buffer);
 
         shader.SetTexture( renderHandle, "Result", outputTexture );
@@ -74,7 +78,13 @@ public class runCompute : MonoBehaviour
     }
 
     private void DispatchKernel(int set)
-    {
+    {   /*
+        for (int i = 0; i < diffGrowth.nodes.Count; i++)
+        {
+            //pointsData[i] = new Vector2(Random.Range(0,texResolution), Random.Range(0,texResolution));
+            pointsData[i] = new Vector2(diffGrowth.nodes.Points[i].x,diffGrowth.nodes.Points[i].y);
+        } */
+        buffer.SetData(diffGrowth.nodes.Points);
         shader.Dispatch(renderHandle, set, set, 1);
     }
 }

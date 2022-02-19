@@ -11,24 +11,27 @@ using Seed.Utilities;
 public class differentialGrowth : MonoBehaviour
 {
     // Editor Input
-    [SerializeField]
-    int circleStartVerts = 8;
+    [SerializeField] int canvasResolution = 1024;
+    [SerializeField] int circleStartVerts = 8;
 
-    [SerializeField]
-    float circleRadius = 2, growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1,
-    minDistance = 0.8f, kdSearchRadius = 0.8f;
+    [SerializeField] float circleRadius = 2, growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, minDistance = 0.8f, kdSearchRadius = 0.8f;
 
-    [SerializeField][Range(0f, 1)]
-    float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
+    [SerializeField] [Range(0f, 1)] float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
+    [SerializeField] [Range(0, 20)] int steps = 1;
+    [SerializeField] [Range(0, 1f)] float stepDiv = 0;
+    [SerializeField] bool stopGrowth;
+    private float stepBarrier;
+    private int stopQ;
 
-    [SerializeField]
-    bool /*skipNeighbor = false, includeZ = false, */loop = false, pruneNodes = false, debug = false;
+    [SerializeField] bool /*skipNeighbor = false, includeZ = false, */loop = false, pruneNodes = false, debug = false;
+    [SerializeField][Range(0f, 0.01f)] float debugScale = 0.001f;
+    //[SerializeField] Component compute;
 
     // KDTree Setting; Default is 32
     int maxPointsPerLeafNode = 32;
 
     // Public Vars
-    public static KDTree nodes;
+    public KDTree nodes;
 
     // Private Vars
     private KDQuery query;
@@ -36,8 +39,15 @@ public class differentialGrowth : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (stopGrowth == true)
+        {
+            stopQ = 0;
+        } else {
+            stopQ = 1;
+        }
+
         //Init main
-        InitKDTree(InitStartCircle(0,0,0,circleRadius,circleStartVerts));
+        InitKDTree(InitStartCircle(circleRadius,circleStartVerts));
         query = new KDQuery();
 
         //Init coroutines
@@ -50,7 +60,17 @@ public class differentialGrowth : MonoBehaviour
         while(true)
         {
             //print("coroutine iteration started");
-            SubdivideTarget (Random.Range(0,nodes.Count));
+            for (int i = 0; i < steps; i++)
+            {
+                SubdivideTarget (Random.Range(0,nodes.Count));
+            }
+            stepBarrier += stepDiv;
+            
+            if (stepBarrier > 1 && steps > stopQ)
+            {
+                steps -= 1;
+                stepBarrier = 0;
+            }
             yield return new WaitForSeconds(growthRate);
         }
     }
@@ -58,7 +78,7 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
         // Node manangement loop
         for (int i = 0; i < nodes.Count; i++)
         {
@@ -67,21 +87,32 @@ public class differentialGrowth : MonoBehaviour
             nodes.Points[i] += AlignmentForceOnPoint(i, alignmentForce);
             SplitEdges(i);
             if (pruneNodes == true) PruneNodes(i);
-            }
+            
+        }
         nodes.Rebuild();
-
+        //Debug.Log("KD Tree contains currently " + nodes.Count + " node(s).");
+        
         // Debug area
         if ((debug == true) && (Input.GetKeyDown("space")))
         {
             Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") node(s)."  );
         }
+
+        if (debug == true)
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                Vector3 centerOnTex = new Vector3 (canvasResolution / 2, canvasResolution /2, 0); // bring in front of texture
+                Debug.DrawLine((nodes.Points[i] - centerOnTex) * debugScale, (nodes.Points[(i + 1) % nodes.Count] - centerOnTex) * debugScale, Color.magenta);
+            }
+        }
     }
 
-    Vector3[] InitStartCircle(float x, float y, float z, float radius, int verts)
+    Vector3[] InitStartCircle(float radius, int verts)
     {
         //Settings
         Vector3[] shape = new Vector3[verts];
-        Vector3 origin = new Vector3(x,y,z);
+        Vector3 origin = new Vector3(canvasResolution / 2, canvasResolution / 2, 0);
 
         //Init
         float a = 2 * Mathf.PI;
@@ -102,11 +133,12 @@ public class differentialGrowth : MonoBehaviour
     void InitKDTree(Vector3[] firstShape)
     {
         nodes = new KDTree(firstShape, maxPointsPerLeafNode);
-
+        /*
         if (debug == true)
         {
             Debug.Log("KDTree //nodes now contains " + nodes.Count + " node(s)");
         }
+        */
     }
 
     Vector3 AttractionForceOnPoint(int index, float desiredDistance, float force)
@@ -233,7 +265,7 @@ public class differentialGrowth : MonoBehaviour
     {
         int nextIndex = (splitIndex + 1) % nodes.Count; // catches values greater than nodes.Count and restarts at index 0
         Vector3 midPoint = (nodes.Points[splitIndex] + nodes.Points[nextIndex]) / 2;
-        if (debug == true) Debug.DrawLine(new Vector3(0,0,0), midPoint, Color.magenta, 1f);
+        //if (debug == true) Debug.DrawLine(new Vector3(0,0,0), midPoint, Color.magenta, 1f);
         InjectNodeToKDTree(midPoint, nextIndex);
     }
 
@@ -256,11 +288,12 @@ public class differentialGrowth : MonoBehaviour
             nodes.Points[i] = shiftBuffer[j];
         }
         //nodes.Rebuild();
-
+        /*
         if (debug == true)
         {
             Debug.Log("KDTree //nodes now contains a new node " + point + " at index " + nextIndex + ". There are " + nodes.Count + " node(s) in total.");
         }
+        */
     }
 
     void EjectNodeFromKDTree (int index)
@@ -278,6 +311,5 @@ public class differentialGrowth : MonoBehaviour
             nodes.Points[i] = shiftBuffer[j];
         }
         nodes.SetCount(oldCount - 1);
-        //nodes.Rebuild();
     }
 }

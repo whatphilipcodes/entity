@@ -1,0 +1,52 @@
+// mean filter code (DrawTrails) curtesy of https://github.com/DenizBicer/Physarum
+
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel DrawPoints
+#pragma kernel DrawTrails
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+
+// texture
+shared RWTexture2D<float4> Result;
+//RWTexture2D<float> TrailBuffer;
+int _texres;
+float4 _pcol;
+
+// testing
+float _decay;
+
+// buffer
+StructuredBuffer<float2> pointsBuffer;
+
+[numthreads(64,1,1)]
+void DrawPoints (uint3 id : SV_DispatchThreadID)
+{
+    if ((pointsBuffer[id.x].x * pointsBuffer[id.x].y) > 0) Result[pointsBuffer[id.x].xy] = _pcol;
+}
+
+[numthreads(16,16,1)]
+void DrawTrails (uint3 id : SV_DispatchThreadID)
+{
+    float value;
+
+    value = Result[id.xy].x;
+
+    float3 d = float3(1, -1, 0.0);
+
+    //mean filter
+    value = value;
+    value += Result[id.xy - d.xx].x; // -1,-1
+    value += Result[id.xy - d.zx].x; // 0, -1
+    value += Result[id.xy - d.yx].x; // +1, -1
+    value += Result[id.xy - d.xz].x; // -1, 0
+    value += Result[id.xy + d.xz].x; // +1, 0
+    value += Result[id.xy + d.yx].x; // -1, +1
+    value += Result[id.xy + d.zx].x; // 0, +1
+    value += Result[id.xy + d.xx].x; // +1, +1
+    
+    value = (value / 9) * (1 - _decay);
+
+    //Result[id.xy] = float4(value, value, value, 0.0);
+    Result[id.xy] = float4(value, value, value, 0.0);
+}

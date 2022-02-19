@@ -1,5 +1,6 @@
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel renderCanvas
+//#pragma kernel processPoints
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
@@ -11,6 +12,7 @@ float4 _pcol;
 
 // buffer
 StructuredBuffer<float2> pointsBuffer;
+RWStructuredBuffer<float2> pixelsBuffer;
 
 // Returns pseudo random number in range 0 <= x < 1
 float random(float value, float seed = 0.546){
@@ -47,11 +49,19 @@ float DrawLine(float2 i, float2 a, float2 b, float thick, float crisp)
 }
 ///////////////
 
-[numthreads(8,8,1)] // x*y*z must be < 1024
+/*
+[numthreads(64,1,1)]
+void processPoints (uint3 id : SV_DISPATCHTHREADID)
+{
+
+}
+*/
+[numthreads(64,1,1)] // x*y*z must be < 1024
 void renderCanvas (uint3 id : SV_DispatchThreadID)
 {
     /*
     float l = DrawLine(id.xy, linesBuffer[id.z]._start, linesBuffer[id.z]._end, _thick, _crisp);
     if (l > 0) Result[id.xy] = lerp(float4(0,0,0,0), _lcol, l);
     */
+    Result[pointsBuffer[id.x].xy] = _pcol;
 }
