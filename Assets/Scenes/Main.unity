@@ -413,7 +413,7 @@ MonoBehaviour:
   stopGrowth: 1
   loop: 1
   pruneNodes: 0
-  debug: 0
+  debug: 1
   debugScale: 0.00244
 --- !u!114 &6443728468629676919
 MonoBehaviour:

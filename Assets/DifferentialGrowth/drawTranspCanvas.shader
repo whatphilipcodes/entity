@@ -1,4 +1,4 @@
-Shader "ComputeShaderAddons/transpCanvas"
+Shader "ComputeShaderAddons/drawTranspCanvas"
 {
     Properties
     {

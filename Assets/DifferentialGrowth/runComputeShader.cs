@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class runCompute_a : MonoBehaviour
+public class runComputeShader : MonoBehaviour
 {
     // UserInput
     [SerializeField] Color pointColor = new Color(1,1,1,1);
