@@ -13,3 +13,16 @@ namespace Seed.Utilities {
         }
     }
 }
+
+// USEFUL CODE
+
+/*
+
+///////////////////////////
+if (Input.GetKey("escape"))
+{
+    Application.Quit();
+}
+///////////////////////////
+
+*/

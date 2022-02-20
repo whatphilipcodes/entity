@@ -1,4 +1,5 @@
 // mean filter code (DrawTrails) curtesy of https://github.com/DenizBicer/Physarum
+// (Modified)
 
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel DrawPoints
@@ -11,6 +12,7 @@
 shared RWTexture2D<float4> Result;
 //RWTexture2D<float> TrailBuffer;
 int _texres;
+int _colres;
 float4 _pcol;
 
 // testing
@@ -18,35 +20,61 @@ float _decay;
 
 // buffer
 StructuredBuffer<float2> pointsBuffer;
+StructuredBuffer<float4> colorsBuffer;
 
 [numthreads(64,1,1)]
 void DrawPoints (uint3 id : SV_DispatchThreadID)
 {
-    if ((pointsBuffer[id.x].x * pointsBuffer[id.x].y) > 0) Result[pointsBuffer[id.x].xy] = _pcol;
+    if ((pointsBuffer[id.x].x * pointsBuffer[id.x].y) > 0) Result[pointsBuffer[id.x].xy] = colorsBuffer[id.x % _colres];
 }
 
 [numthreads(16,16,1)]
 void DrawTrails (uint3 id : SV_DispatchThreadID)
 {
-    float value;
+    float3 value;
 
-    value = Result[id.xy].x;
+    value = Result[id.xy].rgb;
 
     float3 d = float3(1, -1, 0.0);
 
-    //mean filter
-    value = value;
-    value += Result[id.xy - d.xx].x; // -1,-1
-    value += Result[id.xy - d.zx].x; // 0, -1
-    value += Result[id.xy - d.yx].x; // +1, -1
-    value += Result[id.xy - d.xz].x; // -1, 0
-    value += Result[id.xy + d.xz].x; // +1, 0
-    value += Result[id.xy + d.yx].x; // -1, +1
-    value += Result[id.xy + d.zx].x; // 0, +1
-    value += Result[id.xy + d.xx].x; // +1, +1
-    
-    value = (value / 9) * (1 - _decay);
+    //mean filter red
+    value.r = value.r;
+    value.r += Result[id.xy - d.xx].r; // -1,-1
+    value.r += Result[id.xy - d.zx].r; // 0, -1
+    value.r += Result[id.xy - d.yx].r; // +1, -1
+    value.r += Result[id.xy - d.xz].r; // -1, 0
+    value.r += Result[id.xy + d.xz].r; // +1, 0
+    value.r += Result[id.xy + d.yx].r; // -1, +1
+    value.r += Result[id.xy + d.zx].r; // 0, +1
+    value.r += Result[id.xy + d.xx].r; // +1, +1
 
-    //Result[id.xy] = float4(value, value, value, 0.0);
-    Result[id.xy] = float4(value, value, value, 0.0);
+    value.x = (value.x / 9) * (1 - _decay);
+    
+    //mean filter green
+    value.g = value.g;
+    value.g += Result[id.xy - d.xx].g; // -1,-1
+    value.g += Result[id.xy - d.zx].g; // 0, -1
+    value.g += Result[id.xy - d.yx].g; // +1, -1
+    value.g += Result[id.xy - d.xz].g; // -1, 0
+    value.g += Result[id.xy + d.xz].g; // +1, 0
+    value.g += Result[id.xy + d.yx].g; // -1, +1
+    value.g += Result[id.xy + d.zx].g; // 0, +1
+    value.g += Result[id.xy + d.xx].g; // +1, +1
+
+    value.g = (value.g / 9) * (1 - _decay);
+
+    //mean filter blue
+    value.b = value.z;
+    value.b += Result[id.xy - d.xx].b; // -1,-1
+    value.b += Result[id.xy - d.zx].b; // 0, -1
+    value.b += Result[id.xy - d.yx].b; // +1, -1
+    value.b += Result[id.xy - d.xz].b; // -1, 0
+    value.b += Result[id.xy + d.xz].b; // +1, 0
+    value.b += Result[id.xy + d.yx].b; // -1, +1
+    value.b += Result[id.xy + d.zx].b; // 0, +1
+    value.b += Result[id.xy + d.xx].b; // +1, +1
+    
+    value.b = (value.b / 9) * (1 - _decay);
+    
+    Result[id.xy] = float4(value.r, value.g, value.b, 0.0);
 }

@@ -16,10 +16,12 @@ public class runCompute_a : MonoBehaviour
     int pointsHandle;
     int trailsHandle;
     RenderTexture outputTexture;
-    ComputeBuffer buffer;
+    ComputeBuffer pointsBuffer;
+    ComputeBuffer colorsBuffer;
 
-    // Reference for Points of Growth Simulation
+    // Script References
     public differentialGrowth diffGrowth;
+    public getColors getCol;
 
 
     // Use this for initialization
@@ -40,11 +42,15 @@ public class runCompute_a : MonoBehaviour
         // send variables into shader
         shader.SetVector( "_pcol", pointColor );
         shader.SetInt("_texres", texResolution);
+        shader.SetInt("_colres", getCol.colorAmount);
         shader.SetFloat("_decay", decay);
 
         // buffer setup
         int stride = (3) * 4; // every component as a float (3) * 4 bytes per float
-        buffer = new ComputeBuffer(8192, stride);
+        pointsBuffer = new ComputeBuffer(8192, stride);
+
+        stride = (4) * 4;
+        colorsBuffer = new ComputeBuffer(getCol.colorAmount, stride);
 
         // 
         shader.SetTexture( pointsHandle, "Result", outputTexture ); // inputs texture to shader
@@ -55,14 +61,22 @@ public class runCompute_a : MonoBehaviour
     void Update()
     {
         // update compute shader
-        buffer.SetData(diffGrowth.nodes.Points);
-        shader.SetBuffer(pointsHandle, "pointsBuffer", buffer);
+        pointsBuffer.SetData(diffGrowth.nodes.Points);
+        InitColors();
+        shader.SetBuffer(pointsHandle, "pointsBuffer", pointsBuffer);
         shader.Dispatch(pointsHandle, 128, 1, 1);
         shader.Dispatch(trailsHandle, 256, 256, 1);
     }
 
     private void OnDestroy()
     {
-        if (buffer != null) buffer.Dispose();
+        if (pointsBuffer != null) pointsBuffer.Dispose();
+        if (colorsBuffer != null) colorsBuffer.Dispose();
+    }
+
+    void InitColors()
+    {
+        colorsBuffer.SetData(getCol.results);
+        shader.SetBuffer(pointsHandle, "colorsBuffer", colorsBuffer);
     }
 }
