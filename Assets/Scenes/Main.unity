@@ -413,7 +413,7 @@ MonoBehaviour:
   stopGrowth: 1
   loop: 1
   pruneNodes: 0
-  debug: 1
+  debug: 0
   debugScale: 0.00244
 --- !u!114 &6443728468629676919
 MonoBehaviour:
@@ -431,6 +431,7 @@ MonoBehaviour:
   texResolution: 4096
   shader: {fileID: 7200000, guid: 5bed19b2458e44f37975c302ce2b1486, type: 3}
   target: {fileID: 2100000, guid: 0bf47e2d6ea074faca662b338df84565, type: 2}
+  settingRef: {fileID: 8400000, guid: a9cce75cb33f2490495c0acf1fd94162, type: 2}
   decay: 0
   diffGrowth: {fileID: 6443728468629676918}
   getCol: {fileID: 948155925}

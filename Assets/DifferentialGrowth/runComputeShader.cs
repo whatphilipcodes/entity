@@ -9,6 +9,8 @@ public class runComputeShader : MonoBehaviour
     [SerializeField] ComputeShader shader;
     [SerializeField] Material target;
 
+    [SerializeField] RenderTexture settingRef;
+
     // TrailTesting
     [Range(0f, 1f)] public float decay = 0.00122f;
 
@@ -28,9 +30,13 @@ public class runComputeShader : MonoBehaviour
     void Start()
     {
         // Create Texture
+        /*
         outputTexture = new RenderTexture(texResolution, texResolution, 0);
         outputTexture.enableRandomWrite = true;
         outputTexture.filterMode = FilterMode.Trilinear;
+        */
+        outputTexture = new RenderTexture(settingRef);
+        outputTexture.enableRandomWrite = true;
         outputTexture.Create();
 
         // INIT
@@ -60,12 +66,14 @@ public class runComputeShader : MonoBehaviour
 
     void Update()
     {
+        /*
         // update compute shader
         pointsBuffer.SetData(diffGrowth.nodes.Points);
         InitColors();
         shader.SetBuffer(pointsHandle, "pointsBuffer", pointsBuffer);
         shader.Dispatch(pointsHandle, 128, 1, 1);
         shader.Dispatch(trailsHandle, 256, 256, 1);
+        */
     }
 
     private void OnDestroy()

@@ -1,4 +1,4 @@
-// mean filter code (DrawTrails) curtesy of https://github.com/DenizBicer/Physarum
+// mean filter code (DrawTrails) courtesy of https://github.com/DenizBicer/Physarum
 // (Modified)
 
 // Each #kernel tells which function to compile; you can have many kernels
