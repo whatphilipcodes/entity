@@ -66,14 +66,12 @@ public class runComputeShader : MonoBehaviour
 
     void Update()
     {
-        /*
         // update compute shader
         pointsBuffer.SetData(diffGrowth.nodes.Points);
         InitColors();
         shader.SetBuffer(pointsHandle, "pointsBuffer", pointsBuffer);
         shader.Dispatch(pointsHandle, 128, 1, 1);
         shader.Dispatch(trailsHandle, 256, 256, 1);
-        */
     }
 
     private void OnDestroy()
