@@ -2,6 +2,7 @@
 // (Modified)
 
 // Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel SetTexture
 #pragma kernel DrawPoints
 #pragma kernel DrawTrails
 
@@ -10,17 +11,18 @@
 
 // texture
 shared RWTexture2D<float4> Result;
-//RWTexture2D<float> TrailBuffer;
 int _texres;
 int _colres;
-float4 _pcol;
-
-// testing
-float _decay;
 
 // buffer
 StructuredBuffer<float2> pointsBuffer;
 StructuredBuffer<float4> colorsBuffer;
+
+[numthreads(16,16,1)]
+void SetTexture (uint3 id : SV_DispatchThreadID)
+{
+    Result[id.xy] = float4(0.0, 0.0, 0.0, 0.0);
+}
 
 [numthreads(64,1,1)]
 void DrawPoints (uint3 id : SV_DispatchThreadID)
@@ -48,7 +50,7 @@ void DrawTrails (uint3 id : SV_DispatchThreadID)
     value.r += Result[id.xy + d.zx].r; // 0, +1
     value.r += Result[id.xy + d.xx].r; // +1, +1
 
-    value.x = (value.x / 9) * (1 - _decay);
+    value.r = (value.r / 9);
     
     //mean filter green
     value.g = value.g;
@@ -61,10 +63,10 @@ void DrawTrails (uint3 id : SV_DispatchThreadID)
     value.g += Result[id.xy + d.zx].g; // 0, +1
     value.g += Result[id.xy + d.xx].g; // +1, +1
 
-    value.g = (value.g / 9) * (1 - _decay);
+    value.g = (value.g / 9);
 
     //mean filter blue
-    value.b = value.z;
+    value.b = value.b;
     value.b += Result[id.xy - d.xx].b; // -1,-1
     value.b += Result[id.xy - d.zx].b; // 0, -1
     value.b += Result[id.xy - d.yx].b; // +1, -1
@@ -74,7 +76,14 @@ void DrawTrails (uint3 id : SV_DispatchThreadID)
     value.b += Result[id.xy + d.zx].b; // 0, +1
     value.b += Result[id.xy + d.xx].b; // +1, +1
     
-    value.b = (value.b / 9) * (1 - _decay);
+    value.b = (value.b / 9);
+
+    /*
+    //calculate (non accurate) brightness
+    float brightEx = Result[id.xy].r + Result[id.xy].g + Result[id.xy].b;
+    float brightVal = value.r + value.g + value.b;
     
+    if (brightVal > brightEx) Result[id.xy] = float4(value.r, value.g, value.b, 0.0);
+    */
     Result[id.xy] = float4(value.r, value.g, value.b, 0.0);
 }

@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &948155924
 Transform:
   m_ObjectHideFlags: 0
@@ -384,7 +384,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &6443728468629676918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -399,21 +399,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvasResolution: 4096
   circleStartVerts: 128
-  circleRadius: 400
-  growthRate: 0.01
+  circleRadius: 500
+  growthRate: 0
   desiredDistance: 80
   maxDistance: 100
-  minDistance: 40
-  kdSearchRadius: 50
-  attractionForce: 1
-  repulsionForce: 0.2
+  minDistance: 20
+  kdSearchRadius: 25
+  attractionForce: 0.626
+  repulsionForce: 0.205
   alignmentForce: 1
-  steps: 18
-  stepDiv: 0.35
+  maxForcePerFrame: 10
+  steps: 6
+  stepDiv: 0.01
   stopGrowth: 1
   loop: 1
   pruneNodes: 0
-  debug: 0
+  debug: 1
   debugScale: 0.00244
 --- !u!114 &6443728468629676919
 MonoBehaviour:
@@ -427,11 +428,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c77daf66a57204cfb900f57137c2dcbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pointColor: {r: 0.08627452, g: 0.41419637, b: 0.6313726, a: 1}
   texResolution: 4096
   shader: {fileID: 7200000, guid: 5bed19b2458e44f37975c302ce2b1486, type: 3}
   target: {fileID: 2100000, guid: 0bf47e2d6ea074faca662b338df84565, type: 2}
   settingRef: {fileID: 8400000, guid: a9cce75cb33f2490495c0acf1fd94162, type: 2}
-  decay: 0
   diffGrowth: {fileID: 6443728468629676918}
   getCol: {fileID: 948155925}

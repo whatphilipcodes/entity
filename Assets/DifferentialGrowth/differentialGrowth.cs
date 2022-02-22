@@ -17,7 +17,8 @@ public class differentialGrowth : MonoBehaviour
     [SerializeField] float circleRadius = 2, growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, minDistance = 0.8f, kdSearchRadius = 0.8f;
 
     [SerializeField] [Range(0f, 1)] float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
-    [SerializeField] [Range(0, 20)] int steps = 1;
+    [SerializeField] float maxForcePerFrame = 20;
+    [SerializeField] [Range(0, 6)] int steps = 1;
     [SerializeField] [Range(0, 1f)] float stepDiv = 0;
     [SerializeField] bool stopGrowth;
     private float stepBarrier;
@@ -78,7 +79,6 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
         // Node manangement loop
         for (int i = 0; i < nodes.Count; i++)
         {
@@ -86,10 +86,11 @@ public class differentialGrowth : MonoBehaviour
             nodes.Points[i] += RepulsionForceOnPoint(i, repulsionForce);
             nodes.Points[i] += AlignmentForceOnPoint(i, alignmentForce);
             SplitEdges(i);
-            if (pruneNodes == true) PruneNodes(i);
+            //if (pruneNodes == true) PruneNodes(i);
             
         }
         nodes.Rebuild();
+
         //Debug.Log("KD Tree contains currently " + nodes.Count + " node(s).");
         
         // Debug area
@@ -184,7 +185,13 @@ public class differentialGrowth : MonoBehaviour
             }
         }
         Vector3 displacement = diff2next + diff2prev;
-        return displacement;
+
+        if (displacement.magnitude > maxForcePerFrame)
+        {
+            return displacement.normalized * maxForcePerFrame;
+        } else {
+            return displacement;
+        }
     }
 
     Vector3 RepulsionForceOnPoint(int index, float force)
@@ -198,7 +205,13 @@ public class differentialGrowth : MonoBehaviour
             newPoint = Vector2.LerpUnclamped(newPoint, nodes.Points[resultIndices[i]], force);
         }
         Vector3 displacement = newPoint - nodes.Points[index];
-        return displacement;
+        
+        if (displacement.magnitude > maxForcePerFrame)
+        {
+            return displacement.normalized * maxForcePerFrame;
+        } else {
+            return displacement;
+        }
     }
 
     Vector3 AlignmentForceOnPoint(int index, float force)
@@ -219,7 +232,13 @@ public class differentialGrowth : MonoBehaviour
             Vector3 newPoint = Vector2.Lerp(currentNode, midPoint, force);
             displacement = newPoint - currentNode;
         }
-        return displacement;
+
+        if (displacement.magnitude > maxForcePerFrame)
+        {
+            return displacement.normalized * maxForcePerFrame;
+        } else {
+            return displacement;
+        }
     }
 
     void SplitEdges(int index)
@@ -242,6 +261,7 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
+    /*
     void PruneNodes(int index)
     {
         if (index - 1 >= 0)
@@ -253,6 +273,7 @@ public class differentialGrowth : MonoBehaviour
             }
         }
     }
+    */
 
     List<int> findInRadiusKDTree(int index, float radius)
     {
