@@ -4,7 +4,7 @@ using System.Collections;
 public class runComputeShader : MonoBehaviour
 {
     // UserInput
-    [SerializeField] int texResolution = 1024;
+    [SerializeField] static public int canvasResolution = 4096;
     [SerializeField] ComputeShader shader;
     [SerializeField] Material target;
 
@@ -19,7 +19,7 @@ public class runComputeShader : MonoBehaviour
 
     // Script References
     public differentialGrowth diffGrowth;
-    public getColors getCol;
+    public analyzeInput analyzeIn;
 
 
     // Use this for initialization
@@ -36,15 +36,15 @@ public class runComputeShader : MonoBehaviour
         trailsHandle = shader.FindKernel("DrawTrails");
 
         // send variables into shader
-        shader.SetInt("_texres", texResolution);
-        shader.SetInt("_colres", getCol.colorAmount);
+        shader.SetInt("_texres", canvasResolution);
+        shader.SetInt("_colres", analyzeIn.colorsLimit);
 
         // buffer setup
         int stride = (3) * 4; // every component as a float (3) * 4 bytes per float
         pointsBuffer = new ComputeBuffer(8192, stride);
 
         stride = (4) * 4;
-        colorsBuffer = new ComputeBuffer(getCol.colorAmount, stride);
+        colorsBuffer = new ComputeBuffer(analyzeIn.colorsLimit, stride);
 
         // 
         shader.SetTexture( pointsHandle, "Result", outputTexture ); // inputs texture to shader
@@ -70,7 +70,7 @@ public class runComputeShader : MonoBehaviour
 
     void InitColors()
     {
-        colorsBuffer.SetData(getCol.results);
+        colorsBuffer.SetData(analyzeIn.identifiedColors);
         shader.SetBuffer(pointsHandle, "colorsBuffer", colorsBuffer);
     }
 }
@@ -82,7 +82,7 @@ public class runComputeShader : MonoBehaviour
 // public class runComputeShader : MonoBehaviour
 // {
 //     // UserInput
-//     [SerializeField] int texResolution = 4096;
+//     [SerializeField] int canvasResolution = 4096;
 //     [SerializeField] ComputeShader shader;
 //     [SerializeField] Material target;
 
@@ -98,19 +98,13 @@ public class runComputeShader : MonoBehaviour
 
 //     // Script References
 //     public differentialGrowth diffGrowth;
-//     //public getColors getCol;
+//     //public analyzeInors analyzeIn;
 //     public int colorAmount = 4;
 
 
 //     // Use this for initialization
 //     void Start()
 //     {
-//         // Create Texture
-//         /*
-//         outputTexture = new RenderTexture(texResolution, texResolution, 0);
-//         outputTexture.enableRandomWrite = true;
-//         outputTexture.filterMode = FilterMode.Trilinear;
-//         */
 //         outputTexture = new RenderTexture(settingRef);
 //         outputTexture.enableRandomWrite = true;
 //         outputTexture.Create();
@@ -123,7 +117,7 @@ public class runComputeShader : MonoBehaviour
 //         clearHandle = shader.FindKernel("SetTexture");
 
 //         // send variables into shader
-//         shader.SetInt("_texres", texResolution);
+//         shader.SetInt("_texres", canvasResolution);
 //         shader.SetInt("_colres", colorAmount);
 
 //         // buffer setup

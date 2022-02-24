@@ -11,8 +11,8 @@ using Seed.Utilities;
 public class differentialGrowth : MonoBehaviour
 {
     // Editor Input
-    [SerializeField] int canvasResolution = 1024;
-    [SerializeField] int circleStartVerts = 8;
+    public analyzeInput analyzeIn;
+    [SerializeField] int canvasResolution = 4096;
 
     [SerializeField] float circleRadius = 2, growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, minDistance = 0.8f, kdSearchRadius = 0.8f;
 
@@ -24,7 +24,7 @@ public class differentialGrowth : MonoBehaviour
     private float stepBarrier;
     private int stopQ;
 
-    [SerializeField] bool /*skipNeighbor = false, includeZ = false, */loop = false, pruneNodes = false, debug = false;
+    [SerializeField] bool /*skipNeighbor = false, includeZ = false, pruneNodes = false,*/loop = false, debug = false;
     [SerializeField][Range(0f, 0.01f)] float debugScale = 0.001f;
     //[SerializeField] Component compute;
 
@@ -48,7 +48,7 @@ public class differentialGrowth : MonoBehaviour
         }
 
         //Init main
-        InitKDTree(InitStartCircle(circleRadius,circleStartVerts));
+        InitKDTree(analyzeIn.initPoints);
         query = new KDQuery();
 
         //Init coroutines
@@ -109,6 +109,7 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
+    /*
     Vector3[] InitStartCircle(float radius, int verts)
     {
         //Settings
@@ -130,16 +131,20 @@ public class differentialGrowth : MonoBehaviour
         }
         return shape;
     }
+    */
 
     void InitKDTree(Vector3[] firstShape)
     {
         nodes = new KDTree(firstShape, maxPointsPerLeafNode);
-        /*
+        
         if (debug == true)
         {
-            Debug.Log("KDTree //nodes now contains " + nodes.Count + " node(s)");
+            for (int i = 0; i < firstShape.Length; i++)
+            {
+                Vector3 centerOnTex = new Vector3 (canvasResolution / 2, canvasResolution /2, 0);
+                Debug.DrawLine((firstShape[i] - centerOnTex) * debugScale, (firstShape[( i + 1 ) % firstShape.Length] - centerOnTex) * debugScale, Color.green, 100f);
+            }
         }
-        */
     }
 
     Vector3 AttractionForceOnPoint(int index, float desiredDistance, float force)

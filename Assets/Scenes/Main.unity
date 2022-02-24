@@ -132,9 +132,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 948155924}
-  - component: {fileID: 948155925}
+  - component: {fileID: 948155927}
+  - component: {fileID: 948155926}
   m_Layer: 0
-  m_Name: FileWatcher
+  m_Name: Analyzer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -155,7 +156,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &948155925
+--- !u!114 &948155926
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -164,16 +165,42 @@ MonoBehaviour:
   m_GameObject: {fileID: 948155922}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05c35c57d32214bbab4cb9927a737adc, type: 3}
+  m_Script: {fileID: 11500000, guid: 0f95ea14da3d34525bda7adf7a35d0c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  diffGrower: {fileID: 6443728468629676917}
-  tex: {fileID: 0}
-  thresh: 0.2
+  input: {fileID: 948155927}
+  diffGrow: {fileID: 6443728468629676917}
+  colorsLimit: 1024
+  useColorLimit: 1
+  fillEveryThird: 0
+  sortingMode: 2
+  brightThresh: 0.2
+  satThresh: 0.02
+  pixelSaturationThresh: 0.2
+  pixelBrightThresh: 0.2
+  pointsAmount: 256
+  debug: 1
+  smoothing: 1
+  widthThresh: 80
+  minPointDistance: 40
+  iterationsPerFrame: 30000
+  identifiedColors: []
+  initPoints: []
+--- !u!114 &948155927
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 948155922}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf5adef980c9e43909a702e56a10aaa6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   folderpath: /Users/philip/Desktop/Semester_05/04_TalkToMe/SCANS
-  colorAmount: 128
-  newEntity: 0
-  results: []
+  scan: {fileID: 0}
+  newInput: 0
 --- !u!1001 &4974955269416425406
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -330,7 +357,7 @@ GameObject:
   - component: {fileID: 6443728467181324227}
   - component: {fileID: 6443728467181324226}
   m_Layer: 0
-  m_Name: canvas
+  m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -379,7 +406,7 @@ GameObject:
   - component: {fileID: 6443728468629676918}
   - component: {fileID: 6443728468629676919}
   m_Layer: 0
-  m_Name: Host
+  m_Name: DiffHost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -397,10 +424,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5da2af72d30414bb1916377d502d2074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  analyzeIn: {fileID: 948155926}
   canvasResolution: 4096
-  circleStartVerts: 128
   circleRadius: 500
-  growthRate: 0
+  growthRate: 0.01
   desiredDistance: 80
   maxDistance: 100
   minDistance: 20
@@ -409,11 +436,10 @@ MonoBehaviour:
   repulsionForce: 0.205
   alignmentForce: 1
   maxForcePerFrame: 10
-  steps: 6
-  stepDiv: 0.01
+  steps: 2
+  stepDiv: 0.001
   stopGrowth: 1
   loop: 1
-  pruneNodes: 0
   debug: 1
   debugScale: 0.00244
 --- !u!114 &6443728468629676919
@@ -428,9 +454,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c77daf66a57204cfb900f57137c2dcbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  texResolution: 4096
   shader: {fileID: 7200000, guid: 5bed19b2458e44f37975c302ce2b1486, type: 3}
   target: {fileID: 2100000, guid: 0bf47e2d6ea074faca662b338df84565, type: 2}
   settingRef: {fileID: 8400000, guid: a9cce75cb33f2490495c0acf1fd94162, type: 2}
   diffGrowth: {fileID: 6443728468629676918}
-  getCol: {fileID: 948155925}
+  analyzeIn: {fileID: 948155926}
