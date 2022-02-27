@@ -16,6 +16,7 @@ public class analyzeInput : MonoBehaviour
     [SerializeField] bool useColorLimit = true, discardDarkCol = true,fillEveryThird = true /*, randomColors = true*/;
     [SerializeField] colorSortingMode sortingMode = new colorSortingMode();
     [SerializeField] [Range(0,1)] float brightThresh = 0.2f, satThresh = 0.2f, pixelSaturationThresh = 0.2f, pixelBrightThresh = 0.2f;
+    [SerializeField] bool useStaticThreshold = false; 
     [SerializeField] public int pointsAmount = 128;
     [SerializeField] bool debug = false, smoothing = true;
     [SerializeField] [Range(0,100)] int widthThresh = 40;
@@ -70,6 +71,19 @@ public class analyzeInput : MonoBehaviour
         List<Color> colors = new List<Color>();
         List<Vector2> points = new List<Vector2>();
         Color[] allColors = scan.GetPixels();
+
+        float mediumBright = 0;
+
+        // Calculate Treshhold Bias
+        for (int i = 0; i < allColors.Length; i++)
+        {
+            float currentBright;
+            Color.RGBToHSV(allColors[i], out _, out _, out currentBright);
+            mediumBright += currentBright;
+        }
+
+        mediumBright /= allColors.Length;
+        if (useStaticThreshold == false) brightThresh = mediumBright + mediumBright * brightThresh;
         
         bool inObject = false;
         bool startEndObject = false;

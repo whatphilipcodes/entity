@@ -175,10 +175,11 @@ MonoBehaviour:
   discardDarkCol: 1
   fillEveryThird: 0
   sortingMode: 3
-  brightThresh: 0.1
+  brightThresh: 0.8
   satThresh: 0
   pixelSaturationThresh: 0.1
   pixelBrightThresh: 0.2
+  useStaticThreshold: 0
   pointsAmount: 64
   debug: 0
   smoothing: 1
