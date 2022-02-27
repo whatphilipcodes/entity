@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Enable Extra Libraries
 using Seed.Utilities;
+using FindDominantColour;
 
 public class analyzeInput : MonoBehaviour
 {
@@ -10,7 +13,7 @@ public class analyzeInput : MonoBehaviour
     [SerializeField] watchForInput input;
     [SerializeField] GameObject diffGrow;
     [SerializeField] public int colorsLimit = 512;
-    [SerializeField] bool useColorLimit = true, fillEveryThird = true /*, randomColors = true*/;
+    [SerializeField] bool useColorLimit = true, discardDarkCol = true,fillEveryThird = true /*, randomColors = true*/;
     [SerializeField] colorSortingMode sortingMode = new colorSortingMode();
     [SerializeField] [Range(0,1)] float brightThresh = 0.2f, satThresh = 0.2f, pixelSaturationThresh = 0.2f, pixelBrightThresh = 0.2f;
     [SerializeField] public int pointsAmount = 128;
@@ -40,7 +43,8 @@ public class analyzeInput : MonoBehaviour
      {
          Random,
          BySaturation, 
-         ByBrightness
+         ByBrightness,
+         ByDominance
      };
 
     // Start is called before the first frame update
@@ -110,7 +114,7 @@ public class analyzeInput : MonoBehaviour
                 checkWidth = true;
             }
             
-            if (points.Count > 1 && checkWidth == true) 
+            if (points.Count > 1 && checkWidth == true)
             {
                 int width = (int) Vector2.Distance(points[ currentIndex ], points[ lastIndex ]);
                 if (width < widthThresh)
@@ -131,7 +135,62 @@ public class analyzeInput : MonoBehaviour
             }
         }
 
-        FillColorsArray(colors);
+        if (sortingMode != colorSortingMode.ByDominance)
+        {
+            FillColorsArray(colors);
+        } else {
+
+            //DOMINANT COLORS////////
+
+            int reducedResolution = 200;
+            Texture2D scaledInput;
+            iterationCounter = 0;
+
+            ////////////////////////////////////////////////
+
+            if (scan.width > scan.height)
+            {
+                scaledInput = Utils.ScaleTexture(scan, reducedResolution, (int) Math.Floor((scan.height / (scan.width * 1.0f)) * reducedResolution));
+            } else {
+                scaledInput = Utils.ScaleTexture(scan, (int) Math.Floor((scan.width / (scan.width * 1.0f)) * reducedResolution),reducedResolution);
+            }
+            
+            List<System.Drawing.Color> dCandidates = new List<System.Drawing.Color>(scaledInput.width * scaledInput.height);
+            for (int x = 0; x < scaledInput.width; x++) {
+                for (int y = 0; y < scaledInput.height; y++) {
+                    
+                    float bright;
+
+                    UnityEngine.Color ColIn = scaledInput.GetPixel(x, y);
+                    UnityEngine.Color.RGBToHSV(ColIn, out _, out _, out bright);
+                    
+
+                    float r = ColIn.r * 255;
+                    float g = ColIn.g * 255;
+                    float b = ColIn.b * 255;
+
+                    if (debug == true) print("Added: R" + r + " G" + g + " B" + b);
+
+                    if (discardDarkCol == false )
+                    {
+                        dCandidates.Add(System.Drawing.Color.FromArgb((int) r, (int) g, (int) b));
+                    } else if (bright > brightThresh) {
+                        dCandidates.Add(System.Drawing.Color.FromArgb((int) r, (int) g, (int) b));
+                    }
+                    iterationCounter++;
+                    if (iterationCounter > iterationsPerFrame)
+                    {
+                        iterationCounter = 0;
+                        yield return null;
+                    }
+                }
+            }
+            ////////////////////////////////////////////////
+
+            FillColorsArrayDom(dCandidates);
+
+        }
+
         FillPointsArray(points);
 
         if (debug == true) print("Analysis complete");
@@ -161,7 +220,7 @@ public class analyzeInput : MonoBehaviour
         {
             if (sortingMode == colorSortingMode.Random)
             {
-                identifiedColors[i] = colorList[Random.Range(0,colorList.Count)];
+                identifiedColors[i] = colorList[UnityEngine.Random.Range(0,colorList.Count)];
             } else {
                 identifiedColors[i] = colorList[listCounter];
             }
@@ -172,6 +231,31 @@ public class analyzeInput : MonoBehaviour
             } else {
                 listCounter++;
             }
+        }
+    }
+
+    void FillColorsArrayDom (List<System.Drawing.Color> dCandidates)
+    {
+        KMeansClusteringCalculator clustering = new KMeansClusteringCalculator();
+            IList<System.Drawing.Color> dominantColours = clustering.Calculate(colorsLimit, dCandidates, 5.0d);
+
+            List<UnityEngine.Color> dColorResults = new List<UnityEngine.Color>();
+
+            foreach (System.Drawing.Color color in dominantColours) {
+                UnityEngine.Color result = new UnityEngine.Color();
+
+                result.r = (float) color.R / 255;
+                result.g = (float) color.G / 255;
+                result.b = (float) color.B / 255;
+
+                dColorResults.Add(result);
+            }
+
+        identifiedColors = new Color[colorsLimit];
+
+        for (int i = 0; i < dColorResults.Count; i++)
+        {
+            identifiedColors[i] = dColorResults[i];
         }
     }
 
@@ -238,7 +322,7 @@ public class analyzeInput : MonoBehaviour
             }
         }
     }
-    
+ 
     private int ByAngle (anglePoint a, anglePoint b)
     {
         if (a.angle < b.angle)

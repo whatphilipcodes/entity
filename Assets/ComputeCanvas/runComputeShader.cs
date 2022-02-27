@@ -3,23 +3,28 @@ using System.Collections;
 
 public class runComputeShader : MonoBehaviour
 {
-    // UserInput
+    // Editor Input
     [SerializeField] static public int canvasResolution = 4096;
     [SerializeField] ComputeShader shader;
     [SerializeField] Material target;
-
     [SerializeField] RenderTexture settingRef;
+    [SerializeField] bool debug = false;
+    public AnimationCurve colorWeights;
 
     // ShaderData
     int pointsHandle;
     int trailsHandle;
+    int clearHandle;
     RenderTexture outputTexture;
     ComputeBuffer pointsBuffer;
     ComputeBuffer colorsBuffer;
 
-    // Script References
+    // Input
     public differentialGrowth diffGrowth;
     public analyzeInput analyzeIn;
+
+    // Variables
+    float[] absoluteWeights;
 
 
     // Use this for initialization
@@ -34,8 +39,9 @@ public class runComputeShader : MonoBehaviour
         // set handles for ease of use
         pointsHandle = shader.FindKernel("DrawPoints");
         trailsHandle = shader.FindKernel("DrawTrails");
+        clearHandle = shader.FindKernel("SetTexture");
 
-        // send variables into shader
+        // sends variables into shader
         shader.SetInt("_texres", canvasResolution);
         shader.SetInt("_colres", analyzeIn.colorsLimit);
 
@@ -44,22 +50,75 @@ public class runComputeShader : MonoBehaviour
         pointsBuffer = new ComputeBuffer(8192, stride);
 
         stride = (4) * 4;
-        colorsBuffer = new ComputeBuffer(analyzeIn.colorsLimit, stride);
+        colorsBuffer = new ComputeBuffer(8192, stride);
 
-        // 
+        // sends textures to kernels
+        shader.SetTexture( clearHandle, "Result", outputTexture );
         shader.SetTexture( pointsHandle, "Result", outputTexture ); // inputs texture to shader
         shader.SetTexture( trailsHandle, "Result", outputTexture );
         target.SetTexture("_MainTex", outputTexture); // sets output render texture into target material
+
+        shader.Dispatch(clearHandle, 256, 256, 1); // put black into the texture
+
+        // WEIGHING COLORS
+        int colorLength = analyzeIn.identifiedColors.Length;
+        absoluteWeights = new float[colorLength];
+        float sum = 0;
+
+        for (int n = 0; n < colorLength; n++)
+        {
+            absoluteWeights[n] = colorWeights.Evaluate( (float)n / (float)colorLength );
+            sum += absoluteWeights[n];
+        }
+
+        float test = 0;
+        for (int o = 0; o < colorLength; o++)
+        {
+            absoluteWeights[o] = absoluteWeights[o] / sum;
+            test += absoluteWeights[o];
+            if (debug == true) print ("absolutWeight[" + o + "] = " + absoluteWeights[o]);
+        }
+        if (debug == true) print("one test: " + test);
     }
 
     void Update()
-    {
+    {   // prepare buffer arrays
+        int length = diffGrowth.nodes.Points.Length;
+
+        Vector3[] mergePointsID = new Vector3[length];
+        for (int i = 0; i < length; i++)
+        {
+            mergePointsID[i].x = diffGrowth.nodes.Points[i].x;
+            mergePointsID[i].y = diffGrowth.nodes.Points[i].y;
+            mergePointsID[i].z = diffGrowth.nodeID[i];
+        }
+
+        Color[] weightedColors = new Color[length];
+
+        for (int k = 0; k < absoluteWeights.Length; k++)
+        {
+            for (int n = 0; n < absoluteWeights[k] * length; n++)
+            {
+                weightedColors[diffGrowth.nodeID[n]] = analyzeIn.identifiedColors[k];
+            }
+        }
+
+        /*
+        for (int i = 0; i < length; i++)
+        {
+            weightedColors[i] = analyzeIn.identifiedColors[ i % analyzeIn.identifiedColors.Length];
+        }
+        */
+        
         // update compute shader
-        pointsBuffer.SetData(diffGrowth.nodes.Points);
-        InitColors();
+        pointsBuffer.SetData(mergePointsID);
+        colorsBuffer.SetData(weightedColors);
+        shader.SetBuffer(pointsHandle, "colorsBuffer", colorsBuffer);
         shader.SetBuffer(pointsHandle, "pointsBuffer", pointsBuffer);
         shader.Dispatch(pointsHandle, 128, 1, 1);
         shader.Dispatch(trailsHandle, 256, 256, 1);
+
+
     }
 
     private void OnDestroy()
@@ -68,104 +127,9 @@ public class runComputeShader : MonoBehaviour
         if (colorsBuffer != null) colorsBuffer.Dispose();
     }
 
-    void InitColors()
+    //Courtesy of Kiwasi -> https://forum.unity.com/threads/random-numbers-with-a-weighted-chance.442190/#post-2859657
+    public int GetRandomItem (int noOfItems)
     {
-        colorsBuffer.SetData(analyzeIn.identifiedColors);
-        shader.SetBuffer(pointsHandle, "colorsBuffer", colorsBuffer);
+        return noOfItems * (int)colorWeights.Evaluate(Random.value);
     }
 }
-
-
-// using UnityEngine;
-// using System.Collections;
-
-// public class runComputeShader : MonoBehaviour
-// {
-//     // UserInput
-//     [SerializeField] int canvasResolution = 4096;
-//     [SerializeField] ComputeShader shader;
-//     [SerializeField] Material target;
-
-//     [SerializeField] RenderTexture settingRef;
-
-//     // ShaderData
-//     int pointsHandle;
-//     int trailsHandle;
-//     int clearHandle;
-//     RenderTexture outputTexture;
-//     ComputeBuffer pointsBuffer;
-//     ComputeBuffer colorsBuffer;
-
-//     // Script References
-//     public differentialGrowth diffGrowth;
-//     //public analyzeInors analyzeIn;
-//     public int colorAmount = 4;
-
-
-//     // Use this for initialization
-//     void Start()
-//     {
-//         outputTexture = new RenderTexture(settingRef);
-//         outputTexture.enableRandomWrite = true;
-//         outputTexture.Create();
-
-//         // INIT
-
-//         // set handles for ease of use
-//         pointsHandle = shader.FindKernel("DrawPoints");
-//         trailsHandle = shader.FindKernel("DrawTrails");
-//         clearHandle = shader.FindKernel("SetTexture");
-
-//         // send variables into shader
-//         shader.SetInt("_texres", canvasResolution);
-//         shader.SetInt("_colres", colorAmount);
-
-//         // buffer setup
-//         int stride = (3) * 4; // every component as a float (3) * 4 bytes per float
-//         pointsBuffer = new ComputeBuffer(8192, stride);
-
-//         stride = (4) * 4;
-//         colorsBuffer = new ComputeBuffer(colorAmount, stride);
-
-//         // 
-//         shader.SetTexture( clearHandle, "Result", outputTexture );
-//         shader.SetTexture( pointsHandle, "Result", outputTexture ); // inputs texture to shader
-//         shader.SetTexture( trailsHandle, "Result", outputTexture );
-
-//         shader.Dispatch(clearHandle, 256, 256, 1); // put black into the texture
-
-//         target.SetTexture("_MainTex", outputTexture); // sets output render texture into target material
-
-//         Color[] testColors = new Color[colorAmount];
-//         testColors[0] = new Color(1, 0, 0, 1); //red _ yes
-//         testColors[1] = new Color(0, 1, 0, 1); //green
-//         testColors[2] = new Color(0, 0, 1, 1); //blue
-//         testColors[3] = new Color(1, 1, 0, 1); //yellow _yes
-//         testColors[4] = new Color(0, 1, 1, 1); //cyan
-//         testColors[5] = new Color(1, 0, 1, 1); //magenta
-//         testColors[6] = new Color(0.5f, 0, 1, 0); //mix6 _yes
-//         testColors[7] = new Color(1, 0.5f, 1, 0); //mix7
-//         testColors[8] = new Color(0.5f, 0, 1, 0); //mix8
-//         testColors[9] = new Color(0.5f, 0.5f, 1, 0); //mix9 _yes
-//         testColors[10] = new Color(0.5f, 0.5f, 1, 0); //mix10
-//         testColors[11] = new Color(0.5f, 0.5f, 1, 0); //mix11
-
-//         colorsBuffer.SetData(testColors);
-//     }
-
-//     void Update()
-//     {
-//         // update compute shader
-//         pointsBuffer.SetData(diffGrowth.nodes.Points);
-//         shader.SetBuffer(pointsHandle, "colorsBuffer", colorsBuffer);
-//         shader.SetBuffer(pointsHandle, "pointsBuffer", pointsBuffer);
-//         shader.Dispatch(pointsHandle, 128, 1, 1);
-//         shader.Dispatch(trailsHandle, 256, 256, 1);
-//     }
-
-//     private void OnDestroy()
-//     {
-//         if (pointsBuffer != null) pointsBuffer.Dispose();
-//         if (colorsBuffer != null) colorsBuffer.Dispose();
-//     }
-// }

@@ -15,21 +15,25 @@ int _texres;
 int _colres;
 
 // buffer
-StructuredBuffer<float2> pointsBuffer;
+StructuredBuffer<float3> pointsBuffer;
 StructuredBuffer<float4> colorsBuffer;
 
+// init texture as black
 [numthreads(16,16,1)]
 void SetTexture (uint3 id : SV_DispatchThreadID)
 {
     Result[id.xy] = float4(0.0, 0.0, 0.0, 0.0);
 }
 
+// draw points from buffer
 [numthreads(64,1,1)]
 void DrawPoints (uint3 id : SV_DispatchThreadID)
 {
-    if ((pointsBuffer[id.x].x * pointsBuffer[id.x].y) > 0) Result[pointsBuffer[id.x].xy] = colorsBuffer[id.x % _colres];
+    //if ((pointsBuffer[id.x].x * pointsBuffer[id.x].y) > 0) Result[pointsBuffer[id.x].xy] = colorsBuffer[pointsBuffer[id.x].z % _colres];
+    if ((pointsBuffer[id.x].x * pointsBuffer[id.x].y) > 0) Result[pointsBuffer[id.x].xy] = colorsBuffer[pointsBuffer[id.x].z];
 }
 
+// draw trails from points
 [numthreads(16,16,1)]
 void DrawTrails (uint3 id : SV_DispatchThreadID)
 {

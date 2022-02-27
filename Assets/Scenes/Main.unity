@@ -170,16 +170,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   input: {fileID: 948155927}
   diffGrow: {fileID: 6443728468629676917}
-  colorsLimit: 1024
+  colorsLimit: 5
   useColorLimit: 1
+  discardDarkCol: 1
   fillEveryThird: 0
-  sortingMode: 2
-  brightThresh: 0.2
-  satThresh: 0.02
-  pixelSaturationThresh: 0.2
+  sortingMode: 3
+  brightThresh: 0.1
+  satThresh: 0
+  pixelSaturationThresh: 0.1
   pixelBrightThresh: 0.2
-  pointsAmount: 256
-  debug: 1
+  pointsAmount: 64
+  debug: 0
   smoothing: 1
   widthThresh: 80
   minPointDistance: 40
@@ -411,7 +412,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &6443728468629676918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -426,11 +427,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   analyzeIn: {fileID: 948155926}
   canvasResolution: 4096
-  circleRadius: 500
   growthRate: 0.01
   desiredDistance: 80
   maxDistance: 100
-  minDistance: 20
   kdSearchRadius: 25
   attractionForce: 0.626
   repulsionForce: 0.205
@@ -440,8 +439,9 @@ MonoBehaviour:
   stepDiv: 0.001
   stopGrowth: 1
   loop: 1
-  debug: 1
+  debug: 0
   debugScale: 0.00244
+  nodeID: 
 --- !u!114 &6443728468629676919
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -457,5 +457,30 @@ MonoBehaviour:
   shader: {fileID: 7200000, guid: 5bed19b2458e44f37975c302ce2b1486, type: 3}
   target: {fileID: 2100000, guid: 0bf47e2d6ea074faca662b338df84565, type: 2}
   settingRef: {fileID: 8400000, guid: a9cce75cb33f2490495c0acf1fd94162, type: 2}
+  debug: 0
+  colorWeights:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -2.6253655
+      outSlope: -2.6253655
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.045815717
+    - serializedVersion: 3
+      time: 1
+      value: 0.05
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 0
+    m_RotationOrder: 4
   diffGrowth: {fileID: 6443728468629676918}
   analyzeIn: {fileID: 948155926}
