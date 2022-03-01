@@ -107,12 +107,6 @@ public class differentialGrowth : MonoBehaviour
                 Debug.DrawLine((nodes.Points[i] - centerOnTex) * debugScale, (nodes.Points[(i + 1) % nodes.Count] - centerOnTex) * debugScale, Color.magenta);
             }
         }
-
-        if (Input.GetKeyDown("space"))
-        {
-            int n = nodes.Count / 2;
-            print("nodeID: " + nodeID[n] + " | query Index: " + n + " | point: " + nodes.Points[n]);
-        }
     }
 
     

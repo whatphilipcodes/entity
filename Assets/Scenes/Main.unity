@@ -191,7 +191,12 @@ PrefabInstance:
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
       propertyPath: pins.Array.size
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
+        type: 3}
+      propertyPath: pins.Array.data[0].pinMode
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
@@ -216,6 +221,11 @@ PrefabInstance:
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
       propertyPath: pins.Array.data[0].isEditorPin
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
+        type: 3}
+      propertyPath: pins.Array.data[0].prevPinMode
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
@@ -318,12 +328,35 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf5adef980c9e43909a702e56a10aaa6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  larduino: {fileID: 1380660336}
   folderpath: /Users/philip/Desktop/Semester_05/04_TalkToMe/SCANS
   useBrowser: 0
-  WaitbeforeMoving: 25
-  debug: 1
+  WaitbeforeMoving: 30
+  debug: 0
   scan: {fileID: 0}
   newInput: 0
+--- !u!1 &1380660335 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1169019389771402, guid: bb5e6aea88a650f4a8317e74940b0ea4,
+    type: 3}
+  m_PrefabInstance: {fileID: 680116573}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1380660336
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1380660335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb1985cb485cb4f0584ba61ceb028962, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  IterationTime: 1
+  fadeAmount: 4
+  fadeFrequency: 0.05
+  debug: 1
 --- !u!1001 &4974955269416425406
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -390,6 +423,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: customCamera
+      objectReference: {fileID: 0}
+    - target: {fileID: 901233310519285340, guid: 54f9abc97340a4744a2017ff17a835e8,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 901233310519285340, guid: 54f9abc97340a4744a2017ff17a835e8,
         type: 3}

@@ -6,7 +6,6 @@ using UnityEngine;
 // Enable Extra Libraries
 using Seed.Utilities;
 using FindDominantColour;
-using Uduino;
 
 public class analyzeInput : MonoBehaviour
 {

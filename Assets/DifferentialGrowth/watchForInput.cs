@@ -12,6 +12,7 @@ using System;
 public class watchForInput : MonoBehaviour
 {
     // Editor Input
+    [SerializeField] Larduino larduino;
     [SerializeField] string folderpath;
     [SerializeField] bool useBrowser = true;
     [SerializeField] float WaitbeforeMoving = 30;
@@ -24,6 +25,7 @@ public class watchForInput : MonoBehaviour
 
     // Output
     public Texture2D scan;
+    public static bool ready;
     public bool newInput;
 
     // Start is called before the first frame update
@@ -33,6 +35,7 @@ public class watchForInput : MonoBehaviour
         scanStarted = false;
         Directory.CreateDirectory(folderpath + "/history/");
         scanDirectory = new System.IO.DirectoryInfo(folderpath);
+        StartCoroutine(larduino.FadeInLED());
     }
 
     // Update is called once per frame
@@ -45,9 +48,10 @@ public class watchForInput : MonoBehaviour
             scanStarted = true;
         }
 
-        if (Input.GetKeyDown("space"))
+        if (Input.GetMouseButtonDown(1)/*Input.GetKeyDown("space")*/ && ready == true)
         {
             StartScanner();
+            ready = false;
         }
     }
 
@@ -79,6 +83,7 @@ public class watchForInput : MonoBehaviour
         System.IO.File.Move(sourceFile, destinationFile);
 
         scanStarted = false;
+        StartCoroutine(larduino.WaitIteration());
         if (debug == true) print("HandleInput coroutine finished");
     }
 
@@ -112,6 +117,7 @@ public class watchForInput : MonoBehaviour
 
     void StartScanner()
     {
+        StartCoroutine(larduino.FadeOutLED());
         Process.Start("/Users/philip/Desktop/TTM/ScriptEditor/beginScan.app");
     }
 }
