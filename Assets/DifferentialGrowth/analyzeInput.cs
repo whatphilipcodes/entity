@@ -6,6 +6,7 @@ using UnityEngine;
 // Enable Extra Libraries
 using Seed.Utilities;
 using FindDominantColour;
+using Uduino;
 
 public class analyzeInput : MonoBehaviour
 {
@@ -48,10 +49,13 @@ public class analyzeInput : MonoBehaviour
          ByDominance
      };
 
+    // Uduino
+    [Range(0,255)] public/*private*/int intensity;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        Cursor.visible = false;
     }
 
     // Update is called once per frame
