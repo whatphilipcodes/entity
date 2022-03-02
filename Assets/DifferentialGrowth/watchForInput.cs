@@ -21,17 +21,17 @@ public class watchForInput : MonoBehaviour
     // Variables
     System.IO.DirectoryInfo scanDirectory;
     string path;
-    bool scanStarted;
 
     // Output
-    public Texture2D scan;
+    public static Texture2D scan;
     public static bool ready;
-    public bool newInput;
+    public static bool newInput;
+    public static bool scanStarted;
 
     // Start is called before the first frame update
     void Start()
     {
-        if (useBrowser == true) folderpath = "";
+        //if (useBrowser == true) folderpath = "";
         scanStarted = false;
         Directory.CreateDirectory(folderpath + "/history/");
         scanDirectory = new System.IO.DirectoryInfo(folderpath);

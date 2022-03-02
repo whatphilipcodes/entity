@@ -113,10 +113,10 @@ MonoBehaviour:
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 0.4
+    m_Value: 0.2
   response:
     m_OverrideState: 1
-    m_Value: 0.8
+    m_Value: 0.6
   texture:
     m_OverrideState: 0
     m_Value: {fileID: 0}
@@ -279,16 +279,16 @@ MonoBehaviour:
   active: 1
   quality:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 2
   threshold:
     m_OverrideState: 0
     m_Value: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 0.543
+    m_Value: 0.2
   scatter:
     m_OverrideState: 1
-    m_Value: 0.601
+    m_Value: 0.4
   tint:
     m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -306,7 +306,7 @@ MonoBehaviour:
     m_Value: 2
   m_HighQualityPrefiltering:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   m_HighQualityFiltering:
     m_OverrideState: 1
     m_Value: 1

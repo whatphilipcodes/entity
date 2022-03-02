@@ -10,8 +10,8 @@ using FindDominantColour;
 public class analyzeInput : MonoBehaviour
 {
     // Editor Input
-    [SerializeField] watchForInput input;
-    [SerializeField] GameObject diffGrow;
+    //[SerializeField] watchForInput input;
+    //[SerializeField] GameObject diffGrow;
     [SerializeField] public int colorsLimit = 512;
     [SerializeField] bool useColorLimit = true, discardDarkCol = true,fillEveryThird = true /*, randomColors = true*/;
     [SerializeField] colorSortingMode sortingMode = new colorSortingMode();
@@ -51,19 +51,24 @@ public class analyzeInput : MonoBehaviour
     // Uduino
     [Range(0,255)] public/*private*/int intensity;
 
+    // Variables
+    public static bool startSim;
+    private float initBrightThresh;
+
     // Start is called before the first frame update
     void Start()
     {
         Cursor.visible = false;
+        initBrightThresh = brightThresh;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (input.newInput == true)
+        if (watchForInput.newInput == true)
         {
-            StartCoroutine(AnalyzeScan(input.scan));
-            input.newInput = false;
+            StartCoroutine(AnalyzeScan(watchForInput.scan));
+            watchForInput.newInput = false;
         }
     }
 
@@ -86,7 +91,12 @@ public class analyzeInput : MonoBehaviour
         }
 
         mediumBright /= allColors.Length;
-        if (useStaticThreshold == false) brightThresh = mediumBright + mediumBright * brightThresh;
+        if (useStaticThreshold == false) brightThresh = mediumBright + mediumBright * initBrightThresh;
+
+        if (debug == true)
+        {
+            print("calculated brightness median: " + mediumBright + " | therefore current brightness Threshhold: " + brightThresh);
+        }
         
         bool inObject = false;
         bool startEndObject = false;
@@ -186,7 +196,7 @@ public class analyzeInput : MonoBehaviour
                     float g = ColIn.g * 255;
                     float b = ColIn.b * 255;
 
-                    if (debug == true) print("Added: R" + r + " G" + g + " B" + b);
+                    //if (debug == true) print("Added: R" + r + " G" + g + " B" + b);
 
                     if (discardDarkCol == false )
                     {
@@ -211,7 +221,8 @@ public class analyzeInput : MonoBehaviour
         FillPointsArray(points);
 
         if (debug == true) print("Analysis complete");
-        diffGrow.SetActive(true);
+        //diffGrow.SetActive(true);
+        startSim = true;
     }
 
     void FillColorsArray (List<Color> colorList)

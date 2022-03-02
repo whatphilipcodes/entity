@@ -3,6 +3,7 @@ Shader "ComputeShaderAddons/drawTranspCanvas"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _Opacity ("Opacity", Range(0.0, 1.0)) = 1.0
     }
     SubShader
     {
@@ -38,6 +39,7 @@ Shader "ComputeShaderAddons/drawTranspCanvas"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            float _Opacity;
 
             v2f vert (appdata v)
             {
@@ -49,8 +51,10 @@ Shader "ComputeShaderAddons/drawTranspCanvas"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // sample the texture
-                fixed4 col = tex2D(_MainTex, i.uv);
+                // sample the texture and apply opacity
+                fixed4 col = tex2D(_MainTex, i.uv) * _Opacity;
+
+                //return
                 return col;
             }
             ENDCG

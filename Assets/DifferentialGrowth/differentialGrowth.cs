@@ -37,6 +37,9 @@ public class differentialGrowth : MonoBehaviour
 
     // Variables
     private KDQuery query;
+    bool growthRunning;
+    public static bool simRunning;
+    int initialSteps;
 
     // Start is called before the first frame update
     void Start()
@@ -48,19 +51,21 @@ public class differentialGrowth : MonoBehaviour
             stopQ = 1;
         }
 
-        //Init main
-        InitKDTree(analyzeIn.initPoints);
-        //InitKDTree(InitStartCircle(400, 32));
         query = new KDQuery();
+        initialSteps = steps;
+        simRunning = false;
 
-        //Init coroutines
-        StartCoroutine(Growth(growthRate));
+        
+        //InitKDTree(InitStartCircle(400, 32));
     }
 
     // Node injection/growth
     IEnumerator Growth (float growthRate)
     {
-        while(true)
+        growthRunning = true;
+        steps = initialSteps;
+
+        while(growthRunning == true)
         {
             //print("coroutine iteration started");
             for (int i = 0; i < steps; i++)
@@ -74,37 +79,47 @@ public class differentialGrowth : MonoBehaviour
                 steps -= 1;
                 stepBarrier = 0;
             }
+            if (steps == 0) growthRunning = false;
             yield return new WaitForSeconds(growthRate);
         }
+        //print("growth ended");
     }
 
     // Update is called once per frame
     void Update()
-    {   
-        // Node manangement loop
-        for (int i = 0; i < nodes.Count; i++)
+    {
+        if (analyzeInput.startSim == true)
         {
-            nodes.Points[i] += AttractionForceOnPoint(i, desiredDistance, attractionForce);
-            nodes.Points[i] += RepulsionForceOnPoint(i, repulsionForce);
-            nodes.Points[i] += AlignmentForceOnPoint(i, alignmentForce);
-            SplitEdges(i);
-            //if (pruneNodes == true) PruneNodes(i);
-            
-        }
-        nodes.Rebuild();
-        
-        // Debug area
-        if ((debug == true) && (Input.GetKeyDown("space")))
-        {
-            Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") node(s)."  );
+            InitKDTree(analyzeIn.initPoints);
         }
 
-        if (debug == true)
+        if (simRunning == true)
         {
+            // Node manangement loop
             for (int i = 0; i < nodes.Count; i++)
             {
-                Vector3 centerOnTex = new Vector3 (canvasResolution / 2, canvasResolution /2, 0); // bring in front of texture
-                Debug.DrawLine((nodes.Points[i] - centerOnTex) * debugScale, (nodes.Points[(i + 1) % nodes.Count] - centerOnTex) * debugScale, Color.magenta);
+                nodes.Points[i] += AttractionForceOnPoint(i, desiredDistance, attractionForce);
+                nodes.Points[i] += RepulsionForceOnPoint(i, repulsionForce);
+                nodes.Points[i] += AlignmentForceOnPoint(i, alignmentForce);
+                SplitEdges(i);
+                //if (pruneNodes == true) PruneNodes(i);
+                
+            }
+            nodes.Rebuild();
+            
+            // Debug area
+            if ((debug == true) && (Input.GetKeyDown("space")))
+            {
+                Debug.Log("KDTree //nodes contains " + nodes.Count + " (" + nodes.Points.Length + ") node(s)."  );
+            }
+
+            if (debug == true)
+            {
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    Vector3 centerOnTex = new Vector3 (canvasResolution / 2, canvasResolution /2, 0); // bring in front of texture
+                    Debug.DrawLine((nodes.Points[i] - centerOnTex) * debugScale, (nodes.Points[(i + 1) % nodes.Count] - centerOnTex) * debugScale, Color.magenta);
+                }
             }
         }
     }
@@ -135,9 +150,9 @@ public class differentialGrowth : MonoBehaviour
 
     void InitKDTree(Vector3[] firstShape)
     {
+        simRunning = true;
         nodes = new KDTree(firstShape, maxPointsPerLeafNode);
 
-        
         // INIT NODE ID MANAGEMENT
         nodeID = new List<int>();
         for (int i = 0; i < firstShape.Length; i++)
@@ -145,7 +160,10 @@ public class differentialGrowth : MonoBehaviour
             nodeID.Insert(i, i);
         }
         /////////////////////
-        
+
+        //Init coroutines
+        StopCoroutine(Growth(growthRate));
+        StartCoroutine(Growth(growthRate));
 
         if (debug == true)
         {
@@ -154,7 +172,7 @@ public class differentialGrowth : MonoBehaviour
                 Vector3 centerOnTex = new Vector3 (canvasResolution / 2, canvasResolution /2, 0);
                 Debug.DrawLine((firstShape[i] - centerOnTex) * debugScale, (firstShape[( i + 1 ) % firstShape.Length] - centerOnTex) * debugScale, Color.green, 100f);
             }
-            print("NodeID contains " + nodeID.Count + " entries");
+            //print("NodeID contains " + nodeID.Count + " entries");
         }
     }
 

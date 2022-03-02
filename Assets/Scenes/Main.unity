@@ -134,6 +134,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Uduino
       objectReference: {fileID: 0}
+    - target: {fileID: 1169019389771402, guid: bb5e6aea88a650f4a8317e74940b0ea4, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4720884688345560, guid: bb5e6aea88a650f4a8317e74940b0ea4, type: 3}
       propertyPath: m_RootOrder
       value: 3
@@ -148,7 +152,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4720884688345560, guid: bb5e6aea88a650f4a8317e74940b0ea4, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -10
       objectReference: {fileID: 0}
     - target: {fileID: 4720884688345560, guid: bb5e6aea88a650f4a8317e74940b0ea4, type: 3}
       propertyPath: m_LocalRotation.w
@@ -181,7 +185,7 @@ PrefabInstance:
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
       propertyPath: ManagerState
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
@@ -295,24 +299,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f95ea14da3d34525bda7adf7a35d0c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  input: {fileID: 948155927}
-  diffGrow: {fileID: 6443728468629676917}
   colorsLimit: 5
   useColorLimit: 1
   discardDarkCol: 1
   fillEveryThird: 0
   sortingMode: 3
-  brightThresh: 0.8
+  brightThresh: 0.25
   satThresh: 0
   pixelSaturationThresh: 0.1
   pixelBrightThresh: 0.2
   useStaticThreshold: 0
   pointsAmount: 64
-  debug: 0
-  smoothing: 1
+  debug: 1
+  smoothing: 0
   widthThresh: 80
   minPointDistance: 40
-  iterationsPerFrame: 30000
+  iterationsPerFrame: 40000
   identifiedColors: []
   initPoints: []
   intensity: 0
@@ -332,9 +334,7 @@ MonoBehaviour:
   folderpath: /Users/philip/Desktop/Semester_05/04_TalkToMe/SCANS
   useBrowser: 0
   WaitbeforeMoving: 30
-  debug: 0
-  scan: {fileID: 0}
-  newInput: 0
+  debug: 1
 --- !u!1 &1380660335 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1169019389771402, guid: bb5e6aea88a650f4a8317e74940b0ea4,
@@ -356,7 +356,7 @@ MonoBehaviour:
   IterationTime: 1
   fadeAmount: 4
   fadeFrequency: 0.05
-  debug: 1
+  debug: 0
 --- !u!1001 &4974955269416425406
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -577,7 +577,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &6443728468629676918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -622,7 +622,8 @@ MonoBehaviour:
   shader: {fileID: 7200000, guid: 5bed19b2458e44f37975c302ce2b1486, type: 3}
   target: {fileID: 2100000, guid: 0bf47e2d6ea074faca662b338df84565, type: 2}
   settingRef: {fileID: 8400000, guid: a9cce75cb33f2490495c0acf1fd94162, type: 2}
-  debug: 0
+  fadeAmount: 0.1
+  debug: 1
   colorWeights:
     serializedVersion: 2
     m_Curve:
