@@ -594,8 +594,8 @@ MonoBehaviour:
   desiredDistance: 80
   maxDistance: 100
   kdSearchRadius: 25
-  attractionForce: 0.626
-  repulsionForce: 0.205
+  attractionForce: 0.6
+  repulsionForce: 0.4
   alignmentForce: 1
   maxForcePerFrame: 10
   steps: 2
