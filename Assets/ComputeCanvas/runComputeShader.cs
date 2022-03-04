@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 using System.Collections;
 
@@ -28,6 +29,7 @@ public class runComputeShader : MonoBehaviour
     // Variables
     float[] absoluteWeights;
     bool faded;
+    int fileCounter;
 
 
     // Use this for initialization
@@ -35,6 +37,7 @@ public class runComputeShader : MonoBehaviour
     {
         InitializeShader();
         faded = true;
+        fileCounter = 1;
     }
 
     void Update()
@@ -77,9 +80,21 @@ public class runComputeShader : MonoBehaviour
             shader.Dispatch(trailsHandle, 256, 256, 1);
         }
 
+        if(Input.GetKeyDown("s"))
+        {
+            SaveFrame(outputTexture);
+        }
+
+        if (Larduino.saveFrameTrigger == true)
+        {
+            Larduino.saveFrameTrigger = false;
+            SaveFrame(outputTexture);
+        }
+
         if (watchForInput.scanStarted == true && faded == false)
         {
             faded = true;
+            SaveFrame(outputTexture);
             StartCoroutine(FadeToBlack(0.01f));
         }
 
@@ -90,6 +105,7 @@ public class runComputeShader : MonoBehaviour
     {
         //fadingRunning = false;
         faded = false;
+        fileCounter = 1;
         target.SetFloat("_Opacity", 1.0f);
 
         if (pointsBuffer != null) pointsBuffer.Dispose();
@@ -104,7 +120,6 @@ public class runComputeShader : MonoBehaviour
         // set handles for ease of use
         pointsHandle = shader.FindKernel("DrawPoints");
         trailsHandle = shader.FindKernel("DrawTrails");
-        //fadeHandle = shader.FindKernel("FadeBlack");
         clearHandle = shader.FindKernel("SetTexture");
 
         // sends variables into shader
@@ -121,7 +136,6 @@ public class runComputeShader : MonoBehaviour
 
         // sends textures to kernels
         shader.SetTexture( clearHandle, "Result", outputTexture );
-        //shader.SetTexture( fadeHandle, "Result", outputTexture );
         shader.SetTexture( pointsHandle, "Result", outputTexture ); // inputs texture to shader
         shader.SetTexture( trailsHandle, "Result", outputTexture );
         target.SetTexture("_MainTex", outputTexture); // sets output render texture into target material
@@ -141,6 +155,19 @@ public class runComputeShader : MonoBehaviour
             absoluteWeights[n] = colorWeights.Evaluate( (float)n / (float)colorLength );
             sum += absoluteWeights[n];
         }
+    }
+
+    private void SaveFrame(RenderTexture texRaw)
+    {
+        Texture2D tex = new Texture2D (texRaw.width, texRaw.height);
+        RenderTexture.active = texRaw;
+
+        tex.ReadPixels(new Rect(0, 0, texRaw.width, texRaw.height), 0, 0);
+        tex.Apply();
+        
+        byte[] bytes = tex.EncodeToJPG();
+        File.WriteAllBytes(watchForInput.folderpath + "/results/result_" + watchForInput.fileID + "_00" + fileCounter + ".jpg", bytes);
+        fileCounter++;
     }
 
     public IEnumerator FadeToBlack(float fadeAmount)

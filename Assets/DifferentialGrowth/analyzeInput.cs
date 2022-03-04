@@ -58,7 +58,6 @@ public class analyzeInput : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Cursor.visible = false;
         initBrightThresh = brightThresh;
     }
 

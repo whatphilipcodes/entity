@@ -15,6 +15,7 @@ public class Larduino : MonoBehaviour
 
     // Variables
     private int intensity;
+    public static bool saveFrameTrigger;
 
     // Start is called before the first frame update
     void Start()
@@ -78,6 +79,7 @@ public class Larduino : MonoBehaviour
     {
         if (debug == true) print("waiting period started");
         yield return new WaitForSeconds(IterationTime);
+        saveFrameTrigger = true;
         StartCoroutine(FadeInLED());
         if (debug == true) print("ready for next input");
     }

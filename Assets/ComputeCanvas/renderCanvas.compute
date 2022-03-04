@@ -3,7 +3,6 @@
 
 // Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel SetTexture
-//#pragma kernel FadeBlack
 #pragma kernel DrawPoints
 #pragma kernel DrawTrails
 
@@ -14,7 +13,6 @@
 shared RWTexture2D<float4> Result;
 int _texres;
 int _colres;
-float _fadeAmount;
 
 // buffer
 StructuredBuffer<float3> pointsBuffer;

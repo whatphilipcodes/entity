@@ -12,7 +12,7 @@ public class differentialGrowth : MonoBehaviour
 {
     // Editor Input
     public analyzeInput analyzeIn;
-    [SerializeField] int canvasResolution = 4096;
+    [SerializeField] int setCanvasResolution = 4096;
 
     [SerializeField] float /*circleRadius = 2,*/ growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, /*minDistance = 0.8f,*/ kdSearchRadius = 0.8f;
 
@@ -40,6 +40,8 @@ public class differentialGrowth : MonoBehaviour
     bool growthRunning;
     public static bool simRunning;
     int initialSteps;
+    public static int canvasResolution;
+
 
     // Start is called before the first frame update
     void Start()
@@ -55,7 +57,8 @@ public class differentialGrowth : MonoBehaviour
         initialSteps = steps;
         simRunning = false;
 
-        
+        canvasResolution = setCanvasResolution;
+
         //InitKDTree(InitStartCircle(400, 32));
     }
 
