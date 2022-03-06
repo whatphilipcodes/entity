@@ -31,6 +31,9 @@ public class runComputeShader : MonoBehaviour
     bool faded;
     int fileCounter;
 
+    //Output
+    public static Color[] weightedColors;
+
 
     // Use this for initialization
     void Start()
@@ -61,7 +64,8 @@ public class runComputeShader : MonoBehaviour
                 mergePointsID[i].z = diffGrowth.nodeID[i];
             }
 
-            Color[] weightedColors = new Color[length];
+            //weightedColors.Initialize();
+            weightedColors = new Color[length];
 
             for (int k = 0; k < absoluteWeights.Length; k++)
             {

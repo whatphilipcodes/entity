@@ -14,13 +14,14 @@ public class watchForInput : MonoBehaviour
     // Editor Input
     [SerializeField] Larduino larduino;
     [SerializeField] float WaitbeforeMoving = 30;
-    [SerializeField] bool debug = false;
+    [SerializeField] bool debug = false, useBrowser = true;
 
     // Variables
     System.IO.DirectoryInfo scanDirectory;
     string path;
     bool setupComplete;
     public static string folderpath;
+    public string manualpath;
     public static string fileID;
 
     // Output
@@ -32,9 +33,15 @@ public class watchForInput : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //if (useBrowser == true) folderpath = "";
-        StartCoroutine(ShowLoadDialogCoroutine());
-        setupComplete = false;
+        if (useBrowser == true) 
+        {
+            StartCoroutine(ShowLoadDialogCoroutine());
+            setupComplete = false;
+        } else {
+            folderpath = manualpath;
+            Init();
+            setupComplete = true;
+        }
         scanStarted = false;
     }
 

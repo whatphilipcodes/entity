@@ -333,6 +333,8 @@ MonoBehaviour:
   larduino: {fileID: 1380660336}
   WaitbeforeMoving: 30
   debug: 1
+  useBrowser: 0
+  manualpath: /Users/philip/Desktop/Semester_05/04_TalkToMe/entity/DATA
 --- !u!1 &1380660335 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1169019389771402, guid: bb5e6aea88a650f4a8317e74940b0ea4,
@@ -602,6 +604,7 @@ MonoBehaviour:
   stepDiv: 0.001
   stopGrowth: 1
   loop: 1
+  useCustomGrowthPattern: 1
   debug: 0
   debugScale: 0.00244
   nodeID: 

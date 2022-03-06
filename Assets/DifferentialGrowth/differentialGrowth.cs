@@ -13,9 +13,7 @@ public class differentialGrowth : MonoBehaviour
     // Editor Input
     public analyzeInput analyzeIn;
     [SerializeField] int setCanvasResolution = 4096;
-
     [SerializeField] float /*circleRadius = 2,*/ growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, /*minDistance = 0.8f,*/ kdSearchRadius = 0.8f;
-
     [SerializeField] [Range(0f, 1)] float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
     [SerializeField] [Range(1,40)] float maxForcePerFrame = 20;
     [SerializeField] [Range(0, 6)] int steps = 1;
@@ -23,8 +21,7 @@ public class differentialGrowth : MonoBehaviour
     [SerializeField] bool stopGrowth;
     private float stepBarrier;
     private int stopQ;
-
-    [SerializeField] bool /*skipNeighbor = false, includeZ = false, pruneNodes = false,*/loop = false, debug = false;
+    [SerializeField] bool /*skipNeighbor = false, includeZ = false, pruneNodes = false,*/loop = false, useCustomGrowthPattern, debug = false;
     [SerializeField][Range(0f, 0.01f)] float debugScale = 0.001f;
     //[SerializeField] Component compute;
 
@@ -63,7 +60,32 @@ public class differentialGrowth : MonoBehaviour
     }
 
     // Node injection/growth
-    IEnumerator Growth (float growthRate)
+    IEnumerator RandomGrowth (float growthRate)
+    {
+        growthRunning = true;
+        steps = initialSteps;
+
+        while(growthRunning == true)
+        {
+            //print("coroutine iteration started");
+            for (int i = 0; i < steps; i++)
+            {
+                SubdivideTarget (Random.Range(0,nodes.Count));
+            }
+            stepBarrier += stepDiv;
+            
+            if (stepBarrier > 1 && steps > stopQ)
+            {
+                steps -= 1;
+                stepBarrier = 0;
+            }
+            if (steps == 0) growthRunning = false;
+            yield return new WaitForSeconds(growthRate);
+        }
+        //print("growth ended");
+    }
+
+    IEnumerator CustomGrowth (float growthRate)
     {
         growthRunning = true;
         steps = initialSteps;
@@ -165,8 +187,13 @@ public class differentialGrowth : MonoBehaviour
         /////////////////////
 
         //Init coroutines
-        StopCoroutine(Growth(growthRate));
-        StartCoroutine(Growth(growthRate));
+        StopCoroutine(RandomGrowth(growthRate));
+        if (useCustomGrowthPattern == true)
+        {
+            StartCoroutine(CustomGrowth(growthRate));
+        } else {
+            StartCoroutine(RandomGrowth(growthRate));
+        }
 
         if (debug == true)
         {
