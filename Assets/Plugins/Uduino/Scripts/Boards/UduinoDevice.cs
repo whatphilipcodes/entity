@@ -300,6 +300,7 @@ namespace Uduino
 
            return false;
         }
+
         #region Callbacks
         /* Reading / Writing success */
         public virtual void MessageReceived(string message)
@@ -330,6 +331,7 @@ namespace Uduino
                 {
                     if (callback != null)
                         callback(message);
+                    IncrementFPS();
 
                     UduinoManager.Instance.TriggerEvent(message, this);
                     #if UNITY_EDITOR
@@ -388,6 +390,30 @@ namespace Uduino
         void OnApplicationQuit()
         {
             isApplicationQuitting = true;
+        }
+        #endregion
+
+        #region FPS Counter
+        // FPS counter 
+        int frameCount = 0;
+        public float fps = 0.0f;
+        float t = 0.0f;
+        float prevtt = 0.0f;
+        /// <summary>
+        /// Function to increase FPS
+        /// </summary>
+        void IncrementFPS()
+        {
+            frameCount++;
+            t += Time.time - prevtt;
+            if (t > 1.0f)
+            {
+                fps = frameCount;
+                frameCount = 0;
+                t = 0;
+            }
+            prevtt = Time.time;
+            fps = Mathf.Floor(fps);
         }
         #endregion
 

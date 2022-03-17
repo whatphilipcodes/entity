@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Enable Extra Libraries
-using Seed.Utilities;
+using Entity.Utilities;
 using FindDominantColour;
 
 public class analyzeInput : MonoBehaviour

@@ -116,8 +116,11 @@ class Uduino : public Print
     size_t write(const char *buffer, size_t size) {
         return write((const uint8_t *) buffer, size);}
 
-  private:
+    size_t printFloat(double number, int digits = 2);
 
+    //size_t printNumber(unsigned long, uint8_t);
+
+  private:
     char inChar;                     // A character read from the serial stream 
     char buffer[RECEIVE_MAX_BUFFER];       // Buffer of stored characters while waiting for terminator character
     char parameterBuffer[20];        // Buffer of the parameter

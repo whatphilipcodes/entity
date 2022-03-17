@@ -173,13 +173,39 @@ namespace Uduino
         /// Return the arduino board ID from a name
         /// </summary>
         /// <param name="name">Name of the board</param>
-        /// <returns>Aarduino board index in List</returns>
+        /// <returns>Arduino board index in List</returns>
         public int GetBoardIdFromName(string name)
         {
             ArduinoBoardType board = boardTypes.Find(x => x.name == name);
             return boardTypes.IndexOf(board);
         }
 
+        /// <summary>
+        /// Return the arduino board  name
+        /// </summary>
+        /// <param boardId="boardId">Id of the board</param>
+        /// <returns>Board name</returns>
+        public string GetBoardName(int boardId)
+        {
+            return boardTypes[boardId].name;
+        }
+
+        /// <summary>
+        /// Check if a board is Wifi
+        /// </summary>
+        /// <param boardId="boardId">Id of the board</param>
+        /// <returns>Board is Wifi</returns>
+        public bool IsWifiBoard(int boardId)
+        {
+            string boardName = boardTypes[boardId].name;
+            return (
+                boardName == "NodeMCU" ||
+                boardName == "LoLin" ||
+                boardName == "WeMos" ||
+                boardName == "Generic ESP8266" ||
+                boardName == "Generic ESP32"
+            );
+        }
 
         /// <summary>
         /// Add a new board type

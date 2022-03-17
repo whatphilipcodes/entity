@@ -20,7 +20,8 @@ public class watchForInput : MonoBehaviour
     System.IO.DirectoryInfo scanDirectory;
     string path;
     bool setupComplete;
-    public static string folderpath;
+    public static string datapath;
+    public static string rootpath;
     public string manualpath;
     public static string fileID;
 
@@ -38,7 +39,7 @@ public class watchForInput : MonoBehaviour
             StartCoroutine(ShowLoadDialogCoroutine());
             setupComplete = false;
         } else {
-            folderpath = manualpath;
+            rootpath = manualpath;
             Init();
             setupComplete = true;
         }
@@ -47,9 +48,10 @@ public class watchForInput : MonoBehaviour
 
     void Init()
     {
-        Directory.CreateDirectory(folderpath + "/history/");
-        Directory.CreateDirectory(folderpath + "/results/");
-        scanDirectory = new System.IO.DirectoryInfo(folderpath);
+        datapath = rootpath + "/DATA";
+        Directory.CreateDirectory(datapath + "/history/");
+        Directory.CreateDirectory(datapath + "/results/");
+        scanDirectory = new System.IO.DirectoryInfo(datapath);
         Cursor.visible = false;
         StartCoroutine(larduino.FadeInLED());
     }
@@ -63,6 +65,7 @@ public class watchForInput : MonoBehaviour
             {
                 if (debug == true) print("started HandleInput coroutine");
                 StartCoroutine(HandleInput());
+                datapath = rootpath + "/DATA";
                 scanStarted = true;
             }
 
@@ -82,7 +85,7 @@ public class watchForInput : MonoBehaviour
 
         if (debug == true) print("file moving process started");
         // At [0] there is "history" folder
-        path = Directory.GetFiles(folderpath)[1];
+        path = Directory.GetFiles(datapath)[1];
 
         UnityWebRequest www = UnityWebRequestTexture.GetTexture("file://" + path);
         yield return www.SendWebRequest();
@@ -99,7 +102,7 @@ public class watchForInput : MonoBehaviour
         string sourceFile = path;
         // !!! FILE NAMING CONVENTION ALLOWS FOR MAX ONE SCAN PER SECOND ONLY otherwise files will be overwritten !!!
         fileID = DateTime.Now.ToString("yyyyMMddHHmmss");
-        string destinationFile = (folderpath + "/history/" + "/visitor_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".jpg");
+        string destinationFile = (datapath + "/history/" + "/visitor_" + DateTime.Now.ToString("yyyyMMddHHmmss") + ".jpg");
         System.IO.File.Move(sourceFile, destinationFile);
 
         scanStarted = false;
@@ -118,7 +121,7 @@ public class watchForInput : MonoBehaviour
 			for( int i = 0; i < FileBrowser.Result.Length; i++ )
             {
 				if (debug == true) print( FileBrowser.Result[i] );
-                folderpath = FileBrowser.Result[i] + "/DATA";
+                rootpath = FileBrowser.Result[i];
             }
             Init();
             setupComplete = true;
@@ -130,6 +133,6 @@ public class watchForInput : MonoBehaviour
     void StartScanner()
     {
         StartCoroutine(larduino.FadeOutLED());
-        Process.Start(folderpath + "/beginScan.app");
+        Process.Start(rootpath + "/beginScan.app");
     }
 }

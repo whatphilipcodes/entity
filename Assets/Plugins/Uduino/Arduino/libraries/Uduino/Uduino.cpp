@@ -110,15 +110,42 @@ void Uduino::arduinoFound() {
 }
 
 size_t Uduino::write(uint8_t c) {
-   return Serial.print(c);
+   return Serial.print((char)c);
 }
 
 size_t Uduino::write(const uint8_t *buffer, size_t size) {
-  if(size)
-   return Serial.print((char*)buffer);
+ if(size)
+   return Serial.print((char *)buffer);
  else
   return 0;
 }
+
+size_t Uduino::printFloat(double number, int digits) {
+  char result[32]; // Buffer big enough for 7-character float
+  dtostrf(number, 4, digits, result); // Leave room for too large numbers!
+  return print(result);
+}
+
+/*
+size_t Uduino::printNumber(unsigned long n, uint8_t base)
+{
+  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  char *str = &buf[sizeof(buf) - 1];
+
+  *str = '\0';
+
+  // prevent crash if called with base == 1
+  if (base < 2) base = 10;
+
+  do {
+    char c = n % base;
+    n /= base;
+
+    *--str = c < 10 ? c + '0' : c + 'A' - 10;
+  } while(n);
+
+  return write(str);
+}*/
 
 bool Uduino::isConnected()
 {

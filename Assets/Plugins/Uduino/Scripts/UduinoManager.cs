@@ -123,10 +123,12 @@ namespace Uduino
                     return _instance;
 
                 UduinoManager[] uduinoManagers = FindObjectsOfType(typeof(UduinoManager)) as UduinoManager[];
+
+
                 if (uduinoManagers.Length == 0 )
                 {
                     Log.Warning("UduinoManager not present on the scene. Creating a new one.");
-                    UduinoManager manager = new GameObject("UduinoManager").AddComponent<UduinoManager>();
+                    UduinoManager manager = new GameObject("Uduino").AddComponent<UduinoManager>();
                     _instance = manager;
                     return _instance;
                 }
@@ -344,6 +346,11 @@ namespace Uduino
         /// Delemiter between each bundle
         /// </summary>
         public static string bundleDelimiter = "-";
+
+        /// <summary>
+        /// Read line by character
+        /// </summary>
+        public bool readLineCharByChar = false;
 
         /// <summary>
         /// Stop all digital/analog pin on quit
@@ -1791,9 +1798,9 @@ namespace Uduino
     public static class UduinoVersion
     {
         static int major = 3;
-        static int minor = 3;
-        static int patch = 2;
-        static string update = "Jan 2021";
+        static int minor = 5;
+        static int patch = 0;
+        static string update = "Feb 2022";
 
         public static string getVersion()
         {

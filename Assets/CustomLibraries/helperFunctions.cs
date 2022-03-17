@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Seed.Utilities {
+namespace Entity.Utilities {
     public static class Utils
     {
         // Custom modulo operation dealing with negative indices

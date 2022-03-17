@@ -27,6 +27,7 @@ launchCommand	KEYWORD2
 charToInt	KEYWORD2
 delay	KEYWORD2
 printIdentity	KEYWORD2
+printFloat	KEYWORD2
 arduinoFound	KEYWORD2
 arduinoDisconnected	KEYWORD2
 isInit	KEYWORD2

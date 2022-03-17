@@ -185,7 +185,7 @@ PrefabInstance:
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
       propertyPath: ManagerState
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114023058375386772, guid: bb5e6aea88a650f4a8317e74940b0ea4,
         type: 3}
@@ -334,7 +334,7 @@ MonoBehaviour:
   WaitbeforeMoving: 30
   debug: 1
   useBrowser: 0
-  manualpath: /Users/philip/Desktop/Semester_05/04_TalkToMe/entity/DATA
+  manualpath: /Users/philip/Desktop/entity
 --- !u!1 &1380660335 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1169019389771402, guid: bb5e6aea88a650f4a8317e74940b0ea4,
@@ -597,15 +597,16 @@ MonoBehaviour:
   maxDistance: 100
   kdSearchRadius: 25
   attractionForce: 0.6
-  repulsionForce: 0.4
+  repulsionForce: 0.35
   alignmentForce: 1
   maxForcePerFrame: 10
   steps: 2
   stepDiv: 0.001
   stopGrowth: 1
   loop: 1
-  useCustomGrowthPattern: 1
-  debug: 0
+  customGrowthPattern: 0
+  debug: 1
+  testRun: 0
   debugScale: 0.00244
   nodeID: 
 --- !u!114 &6443728468629676919

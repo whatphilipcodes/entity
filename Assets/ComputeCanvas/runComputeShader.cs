@@ -170,7 +170,7 @@ public class runComputeShader : MonoBehaviour
         tex.Apply();
         
         byte[] bytes = tex.EncodeToJPG();
-        File.WriteAllBytes(watchForInput.folderpath + "/results/result_" + watchForInput.fileID + "_00" + fileCounter + ".jpg", bytes);
+        File.WriteAllBytes(watchForInput.datapath + "/results/result_" + watchForInput.fileID + "_00" + fileCounter + ".jpg", bytes);
         fileCounter++;
     }
 

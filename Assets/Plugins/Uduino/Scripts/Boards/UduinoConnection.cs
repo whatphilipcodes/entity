@@ -52,11 +52,24 @@ namespace Uduino
             #endif
             } else if (manager.ExtensionIsPresentAndActive("UduinoDevice_Wifi"))
              {
-             #if UDUINO_WIFI
+         #if UDUINO_WIFI
               connection = new UduinoConnection_Wifi();
-            #endif
+        #endif
             }
-            else { Log.Error("Uduino for Android is not active ! Activate it in the Inspector Panel.");  }
+            else {
+                Log.Error("Uduino for Android is not active ! Activate it in the Inspector Panel.");
+            }
+
+#elif UNITY_IOS
+        if (manager.ExtensionIsPresentAndActive("UduinoDevice_Wifi"))
+             {
+         #if UDUINO_WIFI
+              connection = new UduinoConnection_Wifi();
+        #endif
+            }
+            else {
+                Log.Error("Uduino Wifi is not active ! Activate it in the Inspector Panel.");
+            }
  #endif
 
             Log.Debug("Starting Uduino with type: " + connection.GetType());
@@ -118,7 +131,7 @@ namespace Uduino
 #endif
             uduinoDevice.boardStatus = BoardStatus.Finding;
             int tries = 0;
-            Thread.Sleep(Mathf.FloorToInt(UduinoManager.Instance.delayBeforeDiscover* 1000));
+            Thread.Sleep(Mathf.FloorToInt(_manager.delayBeforeDiscover* 1000));
             do
             {
                 if (TryToFind(uduinoDevice, true))
@@ -140,7 +153,7 @@ namespace Uduino
         {
             uduinoDevice.boardStatus = BoardStatus.Finding;
             int tries = 0;
-            yield return new WaitForSeconds(UduinoManager.Instance.delayBeforeDiscover);
+            yield return new WaitForSeconds(_manager.delayBeforeDiscover);
             do
             {
                 if (TryToFind(uduinoDevice))
@@ -216,7 +229,7 @@ namespace Uduino
         {
             if (connectedDevice != null)
             {
-                UduinoManager.Instance.CloseDevice(connectedDevice);
+                _manager.CloseDevice(connectedDevice);
                 connectedDevice = null;
             }
         }

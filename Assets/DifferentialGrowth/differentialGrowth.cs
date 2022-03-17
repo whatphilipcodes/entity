@@ -6,14 +6,14 @@ using UnityEngine;
 using DataStructures.ViliWonka.KDTree;
 
 // Enable Helpers
-using Seed.Utilities;
+using Entity.Utilities;
 
 public class differentialGrowth : MonoBehaviour
 {
     // Editor Input
     public analyzeInput analyzeIn;
     [SerializeField] int setCanvasResolution = 4096;
-    [SerializeField] float /*circleRadius = 2,*/ growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, /*minDistance = 0.8f,*/ kdSearchRadius = 0.8f;
+    [SerializeField] float growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, kdSearchRadius = 0.8f;
     [SerializeField] [Range(0f, 1)] float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
     [SerializeField] [Range(1,40)] float maxForcePerFrame = 20;
     [SerializeField] [Range(0, 6)] int steps = 1;
@@ -21,11 +21,10 @@ public class differentialGrowth : MonoBehaviour
     [SerializeField] bool stopGrowth;
     private float stepBarrier;
     private int stopQ;
-    [SerializeField] bool /*skipNeighbor = false, includeZ = false, pruneNodes = false,*/loop = false, useCustomGrowthPattern, debug = false;
+    [SerializeField] bool loop = false, customGrowthPattern, debug = false, testRun = false;
     [SerializeField][Range(0f, 0.01f)] float debugScale = 0.001f;
-    //[SerializeField] Component compute;
 
-    // KDTree Setting; Default is 32
+    // KDTree Setting: Default is 32
     int maxPointsPerLeafNode = 32;
 
     // Output
@@ -38,7 +37,20 @@ public class differentialGrowth : MonoBehaviour
     public static bool simRunning;
     int initialSteps;
     public static int canvasResolution;
+    int growCounter;
 
+    // Structs
+    struct ColorAndID
+    {
+        public Color col;
+        public int id;
+
+        public ColorAndID (Color col, int id)
+        {
+            this.col = col;
+            this.id = id;
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -56,7 +68,11 @@ public class differentialGrowth : MonoBehaviour
 
         canvasResolution = setCanvasResolution;
 
-        //InitKDTree(InitStartCircle(400, 32));
+        if (testRun == true)
+        {
+            simRunning = true;
+            InitKDTree(InitStartCircle(400, 32));
+        }
     }
 
     // Node injection/growth
@@ -82,7 +98,7 @@ public class differentialGrowth : MonoBehaviour
             if (steps == 0) growthRunning = false;
             yield return new WaitForSeconds(growthRate);
         }
-        //print("growth ended");
+        if (debug == true) print("growth ended");
     }
 
     IEnumerator CustomGrowth (float growthRate)
@@ -95,7 +111,8 @@ public class differentialGrowth : MonoBehaviour
             //print("coroutine iteration started");
             for (int i = 0; i < steps; i++)
             {
-                SubdivideTarget (Random.Range(0,nodes.Count));
+                if (runComputeShader.weightedColors != null) SubdivideTarget(ColorLookup());
+                growCounter++;
             }
             stepBarrier += stepDiv;
             
@@ -175,6 +192,7 @@ public class differentialGrowth : MonoBehaviour
 
     void InitKDTree(Vector3[] firstShape)
     {
+        growCounter = 0;
         simRunning = true;
         nodes = new KDTree(firstShape, maxPointsPerLeafNode);
 
@@ -188,7 +206,7 @@ public class differentialGrowth : MonoBehaviour
 
         //Init coroutines
         StopCoroutine(RandomGrowth(growthRate));
-        if (useCustomGrowthPattern == true)
+        if ( customGrowthPattern == true)
         {
             StartCoroutine(CustomGrowth(growthRate));
         } else {
@@ -325,20 +343,6 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-    /*
-    void PruneNodes(int index)
-    {
-        if (index - 1 >= 0)
-        {
-            float distance = Vector3.Distance(nodes.Points[index], nodes.Points[index - 1]);
-            if (distance < minDistance)
-            {
-                EjectNodeFromKDTree(index);
-            }
-        }
-    }
-    */
-
     List<int> findInRadiusKDTree(int index, float radius)
     {
         var resultIndices = new List<int>();
@@ -384,23 +388,31 @@ public class differentialGrowth : MonoBehaviour
         }
     }
 
-
-    /*
-    void EjectNodeFromKDTree (int index)
+    int ColorLookup()
     {
-        int oldCount = nodes.Count;
-        Vector3[] shiftBuffer = new Vector3[oldCount - 1 - index];
+        List<ColorAndID> colID = new List<ColorAndID>();
 
-        for (int i = 0, j = index; i < shiftBuffer.Length; i++, j++)
+        for (int i = 0; i < runComputeShader.weightedColors.Length; i++)
         {
-            shiftBuffer[i] = nodes.Points[j];
+            colID.Add(new ColorAndID(runComputeShader.weightedColors[i], nodeID[i]));
         }
-        for (int i = index - 1, j = 0; j < shiftBuffer.Length; i++, j++)
-        {
-            print(i + " | " + j);
-            nodes.Points[i] = shiftBuffer[j];
-        }
-        nodes.SetCount(oldCount - 1);
+        colID.Sort(BySaturation);
+        return colID[growCounter].id;
     }
-    */
+
+    private int BySaturation (ColorAndID a, ColorAndID b)
+    {
+        float a_sat;
+        float b_sat;
+        Color.RGBToHSV(a.col, out _, out a_sat, out _);
+        Color.RGBToHSV(b.col, out _, out b_sat, out _);
+        if (a_sat > b_sat)
+        {
+            return - 1;
+        } else if (a_sat < b_sat) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 }
