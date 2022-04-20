@@ -5,7 +5,7 @@ using UnityEngine;
 
 // Enable Extra Libraries
 using Entity.Utilities;
-using FindDominantColour;
+using FindDominantColour; // found on https://michaeldavidson.me/technology/2015/10/06/finding-dominant-colours-in-images.html
 
 public class analyzeInput : MonoBehaviour
 {
