@@ -13,13 +13,13 @@ void setup()
 
 void loop()
 {
-  uduino.update();
+  uduino.readSerial();
 
-  if (uduino.isConnected()) {
+  if (uduino.isInit()) {
     buttonState = digitalRead(buttonPin);
 
     if (buttonState != prevButtonState) {
-      uduino.println(buttonState);
+      Serial.println(buttonState);
       prevButtonState = buttonState;
     }
     delay(15);

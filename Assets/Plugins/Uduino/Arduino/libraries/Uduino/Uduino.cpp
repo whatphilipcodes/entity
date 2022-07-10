@@ -5,6 +5,8 @@
 #endif
 
 #include "Uduino.h"
+#include <avr/pgmspace.h>
+
 
 #include <string.h>
 #ifndef UDUINO_HARDWAREONLY
@@ -14,14 +16,12 @@
 char *Uduino::_identity = (char*)"none";
 bool Uduino::init = false;
 Uduino * Uduino::_instance = NULL;
-bool Uduino::customPrintFunctionPreset = false;
 
 // Constructor makes sure some things are set. 
 Uduino::Uduino(const char* identity)
 {
  Init(identity," ");
 }
-
 
 Uduino::Uduino(const char* identity, const char* customDelimitier)
 {
@@ -40,17 +40,12 @@ void Uduino::Init(const char* identity, const char* customDelimitier)
 
   strncpy(delim,customDelimitier,MAXDELIMETER);  // strtok_r needs a null-terminated string
 
-  //TODO !!!! Bundle pas par défault " ," faire \t par défaut
+  //TODO !!!! Bundle pas par défault " ,"
 
-  strncpy(delimBundle," ,\0",MAXDELIMETER);  // strtok_r needs a null-terminated string
+  strncpy(delimBundle," ,",MAXDELIMETER);  // strtok_r needs a null-terminated string
   term='\r';   // return character, default terminator for commands
   numCommand=0;    // Number of callback handlers installed
   clearBuffer(); 
-
-  /* // Set comands to non-null
-  for(int p=0; p < UDUINO_MAXCOMMANDS;p++)
-    CommandList[p].function = &Uduino::Empty;
-    */
 
   Uduino::_identity = (char*)identity;
   this->addCommand("identity",Uduino::printIdentity);
@@ -82,11 +77,15 @@ char * Uduino::getPrintedIdentity() {
 }
 
 void Uduino::printIdentity() { 
-  if(Uduino::_instance->customPrintFunctionPreset) {
+  if(Uduino::_instance->customPrint != nullptr) {
     (*Uduino::_instance->customPrint)( Uduino::_instance->getPrintedIdentity());
   } else {
+    #ifdef UDUINO_DEBUG
+      Serial.println(F("printing identity"));
+    #endif
     Serial.println ( Uduino::_instance->getPrintedIdentity());
   }
+    
   delayMicroseconds(30000); // Give sme time before executing the action
 }
 
@@ -109,43 +108,6 @@ void Uduino::arduinoFound() {
   #endif
 }
 
-size_t Uduino::write(uint8_t c) {
-   return Serial.print((char)c);
-}
-
-size_t Uduino::write(const uint8_t *buffer, size_t size) {
- if(size)
-   return Serial.print((char *)buffer);
- else
-  return 0;
-}
-
-size_t Uduino::printFloat(double number, int digits) {
-  char result[32]; // Buffer big enough for 7-character float
-  dtostrf(number, 4, digits, result); // Leave room for too large numbers!
-  return print(result);
-}
-
-/*
-size_t Uduino::printNumber(unsigned long n, uint8_t base)
-{
-  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
-  char *str = &buf[sizeof(buf) - 1];
-
-  *str = '\0';
-
-  // prevent crash if called with base == 1
-  if (base < 2) base = 10;
-
-  do {
-    char c = n % base;
-    n /= base;
-
-    *--str = c < 10 ? c + '0' : c + 'A' - 10;
-  } while(n);
-
-  return write(str);
-}*/
 
 bool Uduino::isConnected()
 {
@@ -163,7 +125,7 @@ bool Uduino::isInit()
 //
 void Uduino::clearBuffer()
 {
-  for (int i=0; i<RECEIVE_MAX_BUFFER; i++) 
+  for (int i=0; i<UDUINOBUFFER; i++) 
   {
     buffer[i]='\0';
   }
@@ -205,31 +167,26 @@ char* Uduino::getParameter(unsigned short index)
   lastCopy[len] = '\0';   
 
   char *token = strtok(lastCopy, delim);
- // parameterBuffer = {0};
-  for (int i=0; i<20; i++) 
-  {
-    parameterBuffer[i]='\0';
-  }
- // char buffer[20];
+  char buffer[20];
 
   byte i=0;
   while (token != NULL)
   {
     if(i == index) {
-      strcpy(parameterBuffer, token);
+      strcpy(buffer, token);
       break;
     }
     token = strtok(NULL, delim);
     i++;
   }
   free(lastCopy);
- // parameterBuffer[strlen(token)]  = '\0';
-  return parameterBuffer;
+  buffer[strlen(token)]  = '\0';
+  return buffer;
 }
 
 // Launch a command
 void Uduino::launchCommand(char * command) {
-  char * t = NULL;
+  char * t;
 
   t = strtok_r(command,delimBundle,&last);
 
@@ -243,7 +200,7 @@ void Uduino::launchCommand(char * command) {
         Serial.println(F("]"));
         #endif
 
-      if (strncmp(t,CommandList[i].command,MAX_COMMAND_NAME) == 0) 
+      if (strncmp(t,CommandList[i].command,UDUINOBUFFER) == 0) 
       {
         #ifdef UDUINO_DEBUG
         Serial.print(F("Matched Command: ")); 
@@ -258,11 +215,6 @@ void Uduino::launchCommand(char * command) {
 
 void Uduino::update(char inputChar) 
 {
-    #ifdef UDUINO_DEBUG
-    Serial.print(F("Uduino::update ")); 
-    Serial.println(inputChar);
-    #endif
-
     inChar = inputChar;
     int i; 
     boolean matched; 
@@ -271,15 +223,12 @@ void Uduino::update(char inputChar)
       #ifdef UDUINO_DEBUG
       Serial.print(F("Received: ")); 
       Serial.println(buffer);
-    #endif
+        #endif
       bufPos=0;           // Reset to start of buffer
       token = strtok_r(buffer,delimBundle,&last);   // Search for command at start of buffer
-    if (token == NULL) return; 
-     // if (token == '\r') return; 
-     // if (token == '\n') return; 
+      if (token == NULL) return; 
       matched=false; 
       for (i=0; i<numCommand; i++) {
-
         #ifdef UDUINO_DEBUG
         Serial.print(F("Comparing [")); 
         Serial.print(token); 
@@ -288,39 +237,22 @@ void Uduino::update(char inputChar)
         Serial.println(F("]"));
         #endif
         // Compare the found command against the list of known commands for a match
-        if (strncmp(token,CommandList[i].command,RECEIVE_MAX_BUFFER) == 0) 
+        if (strncmp(token,CommandList[i].command,UDUINOBUFFER) == 0) 
         {
-         #ifdef UDUINO_DEBUG
+          #ifdef UDUINO_DEBUG
           Serial.print(F("Matched Command: ")); 
           Serial.println(token);
           #endif
 
-        /*  for(int p=0; p < UDUINO_MAXCOMMANDS;p++) {
-        Serial.printf("Address of iptr: %p\n", (void*)&CommandList[p].function);
-        }
-        Serial.printf("Address of value: %p\n", &CommandList[i].function);
-        Serial.printf("Address of iptr: %p\n", (void*)&CommandList[i].function);
-        */
+          // Execute the stored handler function for the command
+          (*CommandList[i].function)();
 
-          #ifdef UDUINO_DEBUG
-          Serial.print(F("Execute Command: ")); 
-          Serial.println(token);
-          #endif
-          (*CommandList[i].function)(); // Execute the stored handler function for the command
           if(disconnectFunctionPreset &&  strcmp(token, "disconnected") == 0) {
             (*customDisconnected)();
           } 
           else if(initFunctionPreset && strcmp(token, "identity") == 0 ) {
            (*customInit)();
-          } //else
-
-
-          #ifdef UDUINO_DEBUG
-          Serial.print(F("Command Executed: ")); 
-          Serial.println(token);
-          Serial.println((int)&token);
-          #endif
-
+          }
           clearBuffer(); 
           matched=true; 
           break; 
@@ -336,10 +268,7 @@ void Uduino::update(char inputChar)
     {
       buffer[bufPos++]=inChar;   // Put character into buffer
       buffer[bufPos]='\0';  // Null terminate
-      if (bufPos > RECEIVE_MAX_BUFFER-1) {
-      	Serial.println("Error: Edit RECEIVE_MAX_BUFFER in Uduino.h to increase receive buffer");
-     		 bufPos=0; // wrap buffer around if full  
-  		}
+      if (bufPos > UDUINOBUFFER-1) bufPos=0; // wrap buffer around if full  
     }
 }
 
@@ -348,7 +277,7 @@ void Uduino::update(char inputChar)
 // buffer for a prefix command, and calls handlers setup by addCommand() member
 void Uduino::update() 
 {
-	  // If we're using the Hardware port, check it.   Otherwise check the user-created SoftwareSerial Port
+  // If we're using the Hardware port, check it.   Otherwise check the user-created SoftwareSerial Port
   #ifdef UDUINO_HARDWAREONLY
   while (Serial.available() > 0) 
   #else
@@ -371,6 +300,7 @@ void Uduino::update()
 
 
 // Depreciated
+
 void Uduino::readSerial() {
   Uduino::update();
 }
@@ -383,9 +313,9 @@ void Uduino::readSerial(char inputChar) {
 // to the handler function to deal with it. 
 void Uduino::addCommand(const char *command, void (*function)())
 {
-  if (numCommand < MAX_COMMANDS) {
+  if (numCommand < MAXCOMMANDS) {
     for (int i=0; i<numCommand; i++) {
-      if (strncmp(command,CommandList[i].command,MAX_COMMAND_NAME) == 0) 
+      if (strncmp(command,CommandList[i].command,UDUINOBUFFER) == 0) 
       {
          #ifdef UDUINO_DEBUG
           Serial.print(i); 
@@ -404,7 +334,7 @@ void Uduino::addCommand(const char *command, void (*function)())
       Serial.print(F("Adding command for ")); 
       Serial.println(command); 
     #endif
-    strncpy(CommandList[numCommand].command,command,MAX_COMMAND_NAME); 
+    strncpy(CommandList[numCommand].command,command,UDUINOBUFFER); 
     CommandList[numCommand].function = function; 
     numCommand++; 
   } else {
@@ -412,7 +342,7 @@ void Uduino::addCommand(const char *command, void (*function)())
     // Not much we can do since there is no real visible error assertion, we just ignore adding
     // the command
     #ifdef UDUINO_DEBUG
-    Serial.println(F("Too many handlers - recompile changing UDUINO_MAXCOMMANDS")); 
+    Serial.println(F("Too many handlers - recompile changing MAXCOMMANDS")); 
     #endif 
   }
 }
@@ -439,11 +369,7 @@ void Uduino::addInitFunction(void (*function)())
 
 void Uduino::addPrintFunction(void (*function)(char data[]))
 {
-    #ifdef UDUINO_DEBUG
-    Serial.println(F("Adding custom print function")); 
-    #endif
-    customPrint = function;
-    customPrintFunctionPreset = true;
+  customPrint = function;
 }
 
 //Converts a char * to int

@@ -11,19 +11,35 @@ public class Larduino : MonoBehaviour
     [SerializeField] int IterationTime = 3;
     [SerializeField][Range(0,5)] int fadeAmount = 1;
     [SerializeField][Range(0,0.5f)] float fadeFrequency = 0.01f;
+    [SerializeField] AnimationCurve fadeCurve;
     [SerializeField] bool debug = false;
+    [SerializeField] [Range(1,10000)] public int touchThreshold = 1000;
 
     // Variables
     private int intensity;
     public static bool saveFrameTrigger;
+    public static bool triggerScan;
+    bool init;
 
     // Start is called before the first frame update
     void Start()
     {
         // INIT
+        init = true;
         intensity = 0;
         UduinoManager.Instance.pinMode(9, PinMode.PWM);
+        UduinoManager.Instance.OnDataReceived += OnDataReceived;
+        
         IterationTime *= 60;
+    }
+
+    void Update()
+    {
+        if (init)
+        {
+            UduinoManager.Instance.sendCommand("t", touchThreshold);
+            if (Time.timeSinceLevelLoad > 0.1f) init = false;
+        }
     }
 
     public IEnumerator FadeInLED()
@@ -61,7 +77,9 @@ public class Larduino : MonoBehaviour
 
         while (active == true)
         {
-            intensity -=  fadeAmount;
+            int factor = (int) fadeCurve.Evaluate(intensity / 255f);
+            //print(factor);
+            intensity -=  fadeAmount * factor;
             Mathf.Clamp(intensity, 0, 255);
 
             if (intensity < 1)
@@ -83,4 +101,18 @@ public class Larduino : MonoBehaviour
         StartCoroutine(FadeInLED());
         if (debug == true) print("ready for next input");
     }
+
+    // Touch Sensor Stuff
+    void OnDataReceived(string data, UduinoDevice uduinoBoard)
+    {
+        //print("received data: " + data);
+        bool isTouch = data.Contains("1");
+        if (isTouch && watchForInput.ready)
+        {
+            if (debug == true) print("touch detected");
+            triggerScan = true;
+            StartCoroutine(FadeOutLED());
+        }
+    }
+    
 }

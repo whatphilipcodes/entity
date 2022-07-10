@@ -69,10 +69,11 @@ public class watchForInput : MonoBehaviour
                 scanStarted = true;
             }
 
-            if (Input.GetMouseButtonDown(1)/*Input.GetKeyDown("space")*/ && ready == true)
+            if (Larduino.triggerScan && ready == true)
             {
                 StartScanner();
                 ready = false;
+                Larduino.triggerScan = false;
             }
         }
     }
@@ -132,7 +133,6 @@ public class watchForInput : MonoBehaviour
 
     void StartScanner()
     {
-        StartCoroutine(larduino.FadeOutLED());
         Process.Start(rootpath + "/beginScan.app");
     }
 }

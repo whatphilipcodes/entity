@@ -11,12 +11,10 @@ void setup()
 }
 
 void loop() {
-  uduino.update();
-  if (uduino.isConnected()) {
-    long newPosition = myEnc.read();
-    if (newPosition != oldPosition) {
-      oldPosition = newPosition;
-      uduino.println(newPosition);
-    }
+  uduino.readSerial();  
+  long newPosition = myEnc.read();
+  if (newPosition != oldPosition) {
+    oldPosition = newPosition;
+    Serial.println(newPosition);
   }
 }
