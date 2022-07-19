@@ -7,30 +7,43 @@ using Uduino;
 
 public class Larduino : MonoBehaviour
 {
-    // Editor Input
-    [SerializeField] int IterationTime = 3;
-    [SerializeField][Range(0,5)] int fadeAmount = 1;
-    [SerializeField][Range(0,0.5f)] float fadeFrequency = 0.01f;
-    [SerializeField] AnimationCurve fadeCurve;
-    [SerializeField] bool debug = false;
-    [SerializeField] [Range(1,10000)] public int touchThreshold = 1000;
+    // Settings (Visible)
+    [SerializeField] AnimationCurve FadeCurve;
+    [SerializeField] [Range(1,10000)] int TouchThreshold = 4000;
+    [SerializeField] bool Debug;
 
-    // Variables
-    private int intensity;
-    public static bool saveFrameTrigger;
-    public static bool triggerScan;
-    bool init;
+
+    // Settings (Hidden)
+    private static int fadeAmount = 1;
+    private static float fadeFrequency = 0.01f;
+    private static AnimationCurve fadeCurve;
+    private static bool debug;
+    private static int touchThreshold = 4000;
+
+    // Output Properties
+    public static bool scanTrigger;
+    //public static bool saveFrameTrigger;
+
+    // Internal Properties
+    private static int intensity;
+    private static bool init;
 
     // Start is called before the first frame update
+    void Awake()
+    {
+        // Adjust settings from inspector
+        touchThreshold = TouchThreshold;
+        fadeCurve = FadeCurve;
+        debug = Debug;
+    }
+
     void Start()
     {
-        // INIT
+        // Init
         init = true;
         intensity = 0;
         UduinoManager.Instance.pinMode(9, PinMode.PWM);
         UduinoManager.Instance.OnDataReceived += OnDataReceived;
-        
-        IterationTime *= 60;
     }
 
     void Update()
@@ -38,15 +51,15 @@ public class Larduino : MonoBehaviour
         if (init)
         {
             UduinoManager.Instance.sendCommand("t", touchThreshold);
-            if (Time.timeSinceLevelLoad > 0.1f) init = false;
+            if (Time.timeSinceLevelLoad > 1f) init = false;
         }
     }
 
-    public IEnumerator FadeInLED()
+    public static IEnumerator FadeInLED()
     {
-        if (debug == true) print("fade in started");
+        if (debug == true) print("led fade in started");
 
-        //INIT
+        // Init
         bool active = true;
         if (intensity != 0) yield return null;
 
@@ -59,26 +72,25 @@ public class Larduino : MonoBehaviour
             {
                 intensity = 255;
                 active = false;
-                if (debug == true) print("fade in finished");
+                if (debug == true) print("led fade in finished");
             }
             yield return new WaitForSeconds(fadeFrequency);
             UduinoManager.Instance.analogWrite(9, intensity);
         }
-        watchForInput.ready = true;
+        MissionControl.ready = true;
     }
 
-    public IEnumerator FadeOutLED()
+    public static IEnumerator FadeOutLED()
     {
-        if (debug == true) print("fade out started");
+        if (debug == true) print("led fade out started");
 
-        //INIT
+        // Init
         bool active = true;
         if (intensity != 255) yield return null;
 
         while (active == true)
         {
             int factor = (int) fadeCurve.Evaluate(intensity / 255f);
-            //print(factor);
             intensity -=  fadeAmount * factor;
             Mathf.Clamp(intensity, 0, 255);
 
@@ -93,26 +105,15 @@ public class Larduino : MonoBehaviour
         }
     }
 
-    public IEnumerator WaitIteration()
+    // Touch Sensor
+    public static void OnDataReceived(string data, UduinoDevice uduinoBoard)
     {
-        if (debug == true) print("waiting period started");
-        yield return new WaitForSeconds(IterationTime);
-        saveFrameTrigger = true;
-        StartCoroutine(FadeInLED());
-        if (debug == true) print("ready for next input");
-    }
-
-    // Touch Sensor Stuff
-    void OnDataReceived(string data, UduinoDevice uduinoBoard)
-    {
-        //print("received data: " + data);
-        bool isTouch = data.Contains("1");
-        if (isTouch && watchForInput.ready)
+        if (data.Contains("1")
+        && !scanTrigger
+        && MissionControl.state == MissionControl.states.awaitingInput)
         {
             if (debug == true) print("touch detected");
-            triggerScan = true;
-            StartCoroutine(FadeOutLED());
+            scanTrigger = true;
         }
     }
-    
 }

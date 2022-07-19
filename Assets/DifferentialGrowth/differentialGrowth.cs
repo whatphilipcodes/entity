@@ -11,7 +11,6 @@ using Entity.Utilities;
 public class differentialGrowth : MonoBehaviour
 {
     // Editor Input
-    public analyzeInput analyzeIn;
     [SerializeField] int setCanvasResolution = 4096;
     [SerializeField] float growthRate = 2f, desiredDistance = 0.8f, maxDistance = 1, kdSearchRadius = 0.8f;
     [SerializeField] [Range(0f, 1)] float attractionForce = 0.5f, repulsionForce = 0.5f, alignmentForce = 0.5f;
@@ -130,9 +129,9 @@ public class differentialGrowth : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (analyzeInput.startSim == true)
+        if (Analyzer.startSim == true)
         {
-            InitKDTree(analyzeIn.initPoints);
+            InitKDTree(Analyzer.initPoints);
         }
 
         if (simRunning == true)

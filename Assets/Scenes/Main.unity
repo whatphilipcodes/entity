@@ -334,24 +334,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f95ea14da3d34525bda7adf7a35d0c6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  colorsLimit: 5
-  useColorLimit: 1
-  discardDarkCol: 1
-  fillEveryThird: 0
-  sortingMode: 3
-  brightThresh: 0.25
-  satThresh: 0
-  pixelSaturationThresh: 0.1
-  pixelBrightThresh: 0.2
-  useStaticThreshold: 0
-  pointsAmount: 64
-  debug: 1
-  smoothing: 0
-  widthThresh: 80
-  minPointDistance: 40
-  iterationsPerFrame: 40000
-  identifiedColors: []
-  initPoints: []
+  ColorsLimit: 512
+  UseColorLimit: 1
+  DiscardDarkCol: 1
+  FillEveryThird: 1
+  SortingMode: 0
+  BrightThresh: 0.2
+  SatThresh: 0.2
+  PixelSaturationThresh: 0.2
+  PixelBrightThresh: 0.2
+  UseStaticThreshold: 0
+  PointsAmount: 128
+  Debug: 0
+  Smoothing: 1
+  WidthThresh: 40
+  MinPointDistance: 40
+  IterationsPerFrame: 200
   intensity: 0
 --- !u!114 &948155927
 MonoBehaviour:
@@ -365,11 +363,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf5adef980c9e43909a702e56a10aaa6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  larduino: {fileID: 1380660336}
-  WaitbeforeMoving: 30
+  displayState: 0
+  scanTime: 40
+  presentationTime: 1800
+  rootpath: /Users/philip/Desktop/entity
   debug: 1
-  useBrowser: 0
-  manualpath: /Users/philip/Desktop/entity
 --- !u!1 &1380660335 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1169019389771402, guid: bb5e6aea88a650f4a8317e74940b0ea4,
@@ -388,35 +386,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb1985cb485cb4f0584ba61ceb028962, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IterationTime: 1
-  fadeAmount: 4
-  fadeFrequency: 0.05
-  fadeCurve:
+  FadeCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 136
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 12
-      inSlope: 23.496227
-      outSlope: 23.496227
+      value: 255
+      inSlope: -464.70255
+      outSlope: -464.70255
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.20236087
-      outWeight: 0.33333334
+      inWeight: 0
+      outWeight: 0.097972974
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  debug: 1
-  touchThreshold: 6000
+  TouchThreshold: 4000
+  Debug: 1
 --- !u!1001 &4974955269416425406
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -529,7 +524,7 @@ MeshRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6443728467181324228}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -650,7 +645,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5da2af72d30414bb1916377d502d2074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  analyzeIn: {fileID: 948155926}
   setCanvasResolution: 4096
   growthRate: 0.01
   desiredDistance: 80
@@ -711,4 +705,3 @@ MonoBehaviour:
     m_PostInfinity: 0
     m_RotationOrder: 4
   diffGrowth: {fileID: 6443728468629676918}
-  analyzeIn: {fileID: 948155926}

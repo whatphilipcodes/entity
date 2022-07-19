@@ -24,7 +24,6 @@ public class runComputeShader : MonoBehaviour
 
     // Input
     public differentialGrowth diffGrowth;
-    public analyzeInput analyzeIn;
 
     // Variables
     float[] absoluteWeights;
@@ -45,7 +44,7 @@ public class runComputeShader : MonoBehaviour
 
     void Update()
     {
-        if (analyzeInput.startSim == true)
+        if (Analyzer.startSim == true)
         {
             InitializeShader();
             ColorWeighing();
@@ -71,7 +70,7 @@ public class runComputeShader : MonoBehaviour
             {
                 for (int n = 0; n < absoluteWeights[k] * length; n++)
                 {
-                    weightedColors[diffGrowth.nodeID[n]] = analyzeIn.identifiedColors[k];
+                    weightedColors[diffGrowth.nodeID[n]] = Analyzer.identifiedColors[k];
                 }
             }
             
@@ -83,26 +82,27 @@ public class runComputeShader : MonoBehaviour
             shader.Dispatch(pointsHandle, 128, 1, 1);
             shader.Dispatch(trailsHandle, 256, 256, 1);
         }
-
+        /*
         if(Input.GetKeyDown("s"))
         {
             SaveFrame(outputTexture);
         }
-
+        
         if (Larduino.saveFrameTrigger == true)
         {
             Larduino.saveFrameTrigger = false;
             SaveFrame(outputTexture);
         }
 
-        if (watchForInput.scanStarted == true && faded == false)
+        if (MissionControl.scanStarted == true && faded == false)
         {
             faded = true;
             SaveFrame(outputTexture);
             StartCoroutine(FadeToBlack(0.01f));
         }
+        */
 
-        if (analyzeInput.startSim == true) analyzeInput.startSim = false;
+        if (Analyzer.startSim == true) Analyzer.startSim = false;
     }
 
     private void InitializeShader()
@@ -128,7 +128,7 @@ public class runComputeShader : MonoBehaviour
 
         // sends variables into shader
         shader.SetInt("_texres", canvasResolution);
-        shader.SetInt("_colres", analyzeIn.colorsLimit);
+        shader.SetInt("_colres", Analyzer.colorsLimit);
         shader.SetFloat("_fadeAmount", fadeAmount);
 
         // buffer setup
@@ -150,7 +150,7 @@ public class runComputeShader : MonoBehaviour
     private void ColorWeighing()
     {
         // WEIGHING COLORS
-        int colorLength = analyzeIn.identifiedColors.Length;
+        int colorLength = Analyzer.identifiedColors.Length;
         absoluteWeights = new float[colorLength];
         float sum = 0;
 
@@ -161,6 +161,7 @@ public class runComputeShader : MonoBehaviour
         }
     }
 
+    /*
     private void SaveFrame(RenderTexture texRaw)
     {
         Texture2D tex = new Texture2D (texRaw.width, texRaw.height);
@@ -170,9 +171,10 @@ public class runComputeShader : MonoBehaviour
         tex.Apply();
         
         byte[] bytes = tex.EncodeToJPG();
-        File.WriteAllBytes(watchForInput.datapath + "/results/result_" + watchForInput.fileID + "_00" + fileCounter + ".jpg", bytes);
+        File.WriteAllBytes(MissionControl.datapath + "/results/result_" + MissionControl.fileID + "_00" + fileCounter + ".jpg", bytes);
         fileCounter++;
     }
+    */
 
     public IEnumerator FadeToBlack(float fadeAmount)
     {

@@ -7,25 +7,22 @@ using UnityEngine;
 using Entity.Utilities;
 using FindDominantColour; // found on https://michaeldavidson.me/technology/2015/10/06/finding-dominant-colours-in-images.html (modified)
 
-public class analyzeInput : MonoBehaviour
+public class Analyzer : MonoBehaviour
 {
-    // Editor Input
-    //[SerializeField] watchForInput input;
-    //[SerializeField] GameObject diffGrow;
-    [SerializeField] public int colorsLimit = 512;
-    [SerializeField] bool useColorLimit = true, discardDarkCol = true,fillEveryThird = true /*, randomColors = true*/;
-    [SerializeField] colorSortingMode sortingMode = new colorSortingMode();
-    [SerializeField] [Range(0,1)] float brightThresh = 0.2f, satThresh = 0.2f, pixelSaturationThresh = 0.2f, pixelBrightThresh = 0.2f;
-    [SerializeField] bool useStaticThreshold = false; 
-    [SerializeField] public int pointsAmount = 128;
-    [SerializeField] bool debug = false, smoothing = true;
-    [SerializeField] [Range(0,100)] int widthThresh = 40;
-    [SerializeField] [Range(0,100)] int minPointDistance = 40;
-    [SerializeField] int iterationsPerFrame = 200;
+    [SerializeField] public int ColorsLimit = 512;
+    [SerializeField] bool UseColorLimit = true, DiscardDarkCol = true, FillEveryThird = true /*, randomColors = true*/;
+    [SerializeField] colorSortingMode SortingMode = new colorSortingMode();
+    [SerializeField] [Range(0,1)] float BrightThresh = 0.2f, SatThresh = 0.2f, PixelSaturationThresh = 0.2f, PixelBrightThresh = 0.2f;
+    [SerializeField] bool UseStaticThreshold = false; 
+    [SerializeField] public int PointsAmount = 128;
+    [SerializeField] bool Debug = false, Smoothing = true;
+    [SerializeField] [Range(0,100)] int WidthThresh = 40;
+    [SerializeField] [Range(0,100)] int MinPointDistance = 40;
+    [SerializeField] int IterationsPerFrame = 200;
 
     // Output
-    public Color[] identifiedColors;
-    public Vector3[] initPoints;
+    public static Color[] identifiedColors;
+    public static Vector3[] initPoints;
 
     // Structs & Enums
     struct anglePoint
@@ -41,38 +38,56 @@ public class analyzeInput : MonoBehaviour
     }
 
     enum colorSortingMode
-     {
-         Random,
-         BySaturation, 
-         ByBrightness,
-         ByDominance
-     };
+    {
+        Random,
+        BySaturation, 
+        ByBrightness,
+        ByDominance
+    };
 
     // Uduino
-    [Range(0,255)] public/*private*/int intensity;
+    [Range(0,255)] public int intensity;
 
     // Variables
     public static bool startSim;
-    private float initBrightThresh;
+    private static float initBrightThresh;
 
-    // Start is called before the first frame update
-    void Start()
+    // Settings (hidden)
+    public static int colorsLimit; // read by runComputeShader.cs
+    private static bool useColorLimit, discardDarkCol, fillEveryThird;
+    private static colorSortingMode sortingMode;
+    private static float brightThresh, satThresh, pixelSaturationThresh, pixelBrightThresh;
+    private static bool useStaticThreshold; 
+    private static int pointsAmount;
+    private static bool debug, smoothing;
+    private static int widthThresh;
+    private static int minPointDistance;
+    private static int iterationsPerFrame;
+
+    void Awake()
     {
         initBrightThresh = brightThresh;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (watchForInput.newInput == true)
-        {
-            StartCoroutine(AnalyzeScan(watchForInput.scan));
-            watchForInput.newInput = false;
-        }
+        colorsLimit = ColorsLimit;
+        useColorLimit = UseColorLimit;
+        discardDarkCol = DiscardDarkCol;
+        fillEveryThird = FillEveryThird;
+        sortingMode = SortingMode;
+        brightThresh = BrightThresh;
+        satThresh = SatThresh;
+        pixelSaturationThresh = PixelSaturationThresh;
+        pixelBrightThresh = PixelBrightThresh;
+        useStaticThreshold = UseStaticThreshold; 
+        pointsAmount = PointsAmount;
+        debug = Debug;
+        smoothing = Smoothing;
+        widthThresh = WidthThresh;
+        minPointDistance = MinPointDistance;
+        iterationsPerFrame = IterationsPerFrame;
     }
 
     // Functions
-    IEnumerator AnalyzeScan (Texture2D scan)
+    public static IEnumerator AnalyzeScan (Texture2D scan)
     {
         if (debug == true) print("Analysis started");
         List<Color> colors = new List<Color>();
@@ -224,7 +239,7 @@ public class analyzeInput : MonoBehaviour
         startSim = true;
     }
 
-    void FillColorsArray (List<Color> colorList)
+    static void FillColorsArray (List<Color> colorList)
     {
         if (sortingMode != colorSortingMode.Random && sortingMode == colorSortingMode.ByBrightness)
         {
@@ -261,7 +276,7 @@ public class analyzeInput : MonoBehaviour
         }
     }
 
-    void FillColorsArrayDom (List<System.Drawing.Color> dCandidates)
+    static void FillColorsArrayDom (List<System.Drawing.Color> dCandidates)
     {
         KMeansClusteringCalculator clustering = new KMeansClusteringCalculator();
             IList<System.Drawing.Color> dominantColours = clustering.Calculate(colorsLimit, dCandidates, 5.0d);
@@ -286,7 +301,7 @@ public class analyzeInput : MonoBehaviour
         }
     }
 
-    void FillPointsArray (List<Vector2> pointsList)
+    static void FillPointsArray (List<Vector2> pointsList)
     {
         if (pointsList.Count > pointsAmount)
         {
@@ -350,7 +365,7 @@ public class analyzeInput : MonoBehaviour
         }
     }
  
-    private int ByAngle (anglePoint a, anglePoint b)
+    private static int ByAngle (anglePoint a, anglePoint b)
     {
         if (a.angle < b.angle)
         {
@@ -362,7 +377,7 @@ public class analyzeInput : MonoBehaviour
         }
     }
 
-    private int ByBrightness (Color a, Color b)
+    private static int ByBrightness (Color a, Color b)
     {
         float a_bright;
         float b_bright;
@@ -378,7 +393,7 @@ public class analyzeInput : MonoBehaviour
         }
     }
 
-    private int BySaturation (Color a, Color b)
+    private static int BySaturation (Color a, Color b)
     {
         float a_sat;
         float b_sat;
