@@ -9,16 +9,16 @@ using FindDominantColour; // found on https://michaeldavidson.me/technology/2015
 
 public class Analyzer : MonoBehaviour
 {
-    [SerializeField] public int ColorsLimit = 512;
-    [SerializeField] bool UseColorLimit = true, DiscardDarkCol = true, FillEveryThird = true /*, randomColors = true*/;
-    [SerializeField] colorSortingMode SortingMode = new colorSortingMode();
-    [SerializeField] [Range(0,1)] float BrightThresh = 0.2f, SatThresh = 0.2f, PixelSaturationThresh = 0.2f, PixelBrightThresh = 0.2f;
+    [SerializeField] public int ColorsLimit = 5;
+    [SerializeField] bool UseColorLimit = true, DiscardDarkCol = true, FillEveryThird = false;
+    [SerializeField] colorSortingMode SortingMode = new colorSortingMode(); // By Dominance
+    [SerializeField] [Range(0,1)] float BrightThresh = 0.25f, SatThresh = 0f, PixelSaturationThresh = 0.1f, PixelBrightThresh = 0.2f;
     [SerializeField] bool UseStaticThreshold = false; 
-    [SerializeField] public int PointsAmount = 128;
-    [SerializeField] bool Debug = false, Smoothing = true;
-    [SerializeField] [Range(0,100)] int WidthThresh = 40;
+    [SerializeField] public int PointsAmount = 64;
+    [SerializeField] bool Debug = true, Smoothing = false;
+    [SerializeField] [Range(0,100)] int WidthThresh = 80;
     [SerializeField] [Range(0,100)] int MinPointDistance = 40;
-    [SerializeField] int IterationsPerFrame = 200;
+    [SerializeField] int IterationsPerFrame = 40000;
 
     // Output
     public static Color[] identifiedColors;
@@ -235,7 +235,7 @@ public class Analyzer : MonoBehaviour
         FillPointsArray(points);
 
         if (debug == true) print("Analysis complete");
-        //diffGrow.SetActive(true);
+        MissionControl.state = MissionControl.states.presenting;
         startSim = true;
     }
 

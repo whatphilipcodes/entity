@@ -17,6 +17,7 @@ public class MissionControl : MonoBehaviour
         init,
         awaitingInput,
         scanning,
+        loading,
         analyzing,
         presenting
     }
@@ -31,13 +32,13 @@ public class MissionControl : MonoBehaviour
 
     // Output
     public static Texture2D scan;
+    public static string resultPath;
+    public static bool captureImage;
 
-    // TO BE REMOVED
-    public static bool ready;
-    public static bool newInput;
-    public static bool scanStarted;
-    bool setupComplete;
-    public static string fileID;
+    // State bools
+    bool loading;
+    bool analyzing;
+    bool presenting;
 
     // Start is called before the first frame update
     void Start()
@@ -49,18 +50,20 @@ public class MissionControl : MonoBehaviour
         Cursor.visible = false;
 
         Init();
+
+        // init public static
+        resultPath = rootpath + "/DATA/RESULTS/";
     }
 
     void Init()
     {
-        state = states.awaitingInput;
         StartCoroutine(Larduino.FadeInLED());
     }
 
     // Update is called once per frame
     void Update()
     {
-        // update state display
+        // for display in inspector only
         displayState = state;
 
         switch (state)
@@ -71,15 +74,63 @@ public class MissionControl : MonoBehaviour
                     StartScanner();
                     state = states.scanning;
                     Larduino.scanTrigger = false;
+
+                    presenting = false;
                 }
                 break;
+
+            case states.scanning:
+                break;
+
+            case states.loading:
+                if (!loading)
+                {
+                    StartCoroutine(LoadScan());
+
+                    loading = true;
+                }
+                break;
+
             case states.analyzing:
-                StartCoroutine(LoadScan());
+                if (!analyzing)
+                {
+                    StartCoroutine(Analyzer.AnalyzeScan(scan));
+
+                    loading = false;
+                    analyzing = true;
+                }
+                break;
+
+            case states.presenting:
+                if (!presenting)
+                {
+                    StartCoroutine(Presentation(presentationTime));
+
+                    analyzing = false;
+                    presenting = true;
+                }
                 break;
         }
+
     }
 
-    // Functions
+    // scanning
+    void StartScanner()
+    {
+        if (debug) print("scanning object");
+        Process.Start(rootpath + "/beginScan.app");
+        StartCoroutine(Larduino.FadeOutLED());
+        StartCoroutine(Scan(scanTime));
+    }
+
+    IEnumerator Scan(float scanTime)
+    {
+        yield return new WaitForSeconds(scanTime);
+        if (debug) print("scan finished");
+        state = states.loading;
+    }
+
+    // loading
     IEnumerator LoadScan()
     {
         if (debug) print("loading scan");
@@ -96,36 +147,26 @@ public class MissionControl : MonoBehaviour
         else
         {
             scan = ((DownloadHandlerTexture)www.downloadHandler).texture;
-            StartCoroutine(Presentation(presentationTime));
         }
+
+        if (debug) print("scan loaded");
+        state = states.analyzing;
     }
 
+    // presententing
     public IEnumerator Presentation(float presentationTime)
     {
         if (debug) print("presentation starting");
-        state = states.presenting;
-        Analyzer.AnalyzeScan(scan);
         yield return new WaitForSeconds(presentationTime);
 
-        //saveFrameTrigger = true;
-
-        if (debug) print("ready for next input");
-        state = states.awaitingInput;
+        captureImage = true;
         StartCoroutine(Larduino.FadeInLED());
+        if (debug) print("ready for next input");
     }
 
-    void StartScanner()
+    // various
+    void OnApplicationQuit()
     {
-        if (debug) print("scanning object");
-        Process.Start(rootpath + "/beginScan.app");
-        StartCoroutine(Larduino.FadeOutLED());
-        StartCoroutine(Scan(scanTime));
-    }
-
-    IEnumerator Scan(float scanTime)
-    {
-        yield return new WaitForSeconds(scanTime);
-        if (debug) print("scan finished");
-        state = states.analyzing;
+        Larduino.ExitLeds();
     }
 }

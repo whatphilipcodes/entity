@@ -42,7 +42,7 @@ public class Larduino : MonoBehaviour
         // Init
         init = true;
         intensity = 0;
-        UduinoManager.Instance.pinMode(9, PinMode.PWM);
+        //UduinoManager.Instance.pinMode(9, PinMode.PWM);
         UduinoManager.Instance.OnDataReceived += OnDataReceived;
     }
 
@@ -62,22 +62,23 @@ public class Larduino : MonoBehaviour
         // Init
         bool active = true;
         if (intensity != 0) yield return null;
+        UduinoManager.Instance.pinMode(9, PinMode.PWM);
 
-        while (active == true)
+        while (active)
         {
             intensity += fadeAmount;
-            Mathf.Clamp(intensity, 0, 255);
+            intensity = Mathf.Clamp(intensity, 0, 255);
 
-            if (intensity > 254)
+            if (intensity == 255)
             {
-                intensity = 255;
                 active = false;
-                if (debug == true) print("led fade in finished");
             }
             yield return new WaitForSeconds(fadeFrequency);
             UduinoManager.Instance.analogWrite(9, intensity);
         }
-        MissionControl.ready = true;
+
+        if (debug == true) print("led fade in finished");
+        MissionControl.state = MissionControl.states.awaitingInput;
     }
 
     public static IEnumerator FadeOutLED()
@@ -87,22 +88,33 @@ public class Larduino : MonoBehaviour
         // Init
         bool active = true;
         if (intensity != 255) yield return null;
+        UduinoManager.Instance.pinMode(9, PinMode.PWM);
 
-        while (active == true)
+        while (active)
         {
             int factor = (int) fadeCurve.Evaluate(intensity / 255f);
             intensity -=  fadeAmount * factor;
-            Mathf.Clamp(intensity, 0, 255);
+            intensity = Mathf.Clamp(intensity, 0, 255);
 
-            if (intensity < 1)
-            {
-                intensity = 0;
-                active = false;
-                if (debug == true) print("fade out finished");
-            }
             yield return new WaitForSeconds(fadeFrequency);
             UduinoManager.Instance.analogWrite(9, intensity);
+
+            if (intensity == 0)
+            {
+                active = false;
+            }
         }
+
+        // Force LOW
+        yield return new WaitForSeconds(0.4f);
+        UduinoManager.Instance.pinMode(9, PinMode.Input);
+
+        if (debug == true) print("fade out finished");
+    }
+
+    public static void ExitLeds()
+    {
+        UduinoManager.Instance.pinMode(9, PinMode.Input);
     }
 
     // Touch Sensor

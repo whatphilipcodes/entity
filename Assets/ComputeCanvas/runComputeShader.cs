@@ -2,6 +2,8 @@ using System.IO;
 using UnityEngine;
 using System.Collections;
 
+using System;
+
 public class runComputeShader : MonoBehaviour
 {
     // Editor Input
@@ -82,25 +84,19 @@ public class runComputeShader : MonoBehaviour
             shader.Dispatch(pointsHandle, 128, 1, 1);
             shader.Dispatch(trailsHandle, 256, 256, 1);
         }
-        /*
-        if(Input.GetKeyDown("s"))
-        {
-            SaveFrame(outputTexture);
-        }
         
-        if (Larduino.saveFrameTrigger == true)
+        if(Input.GetKeyDown("s") || MissionControl.captureImage)
         {
-            Larduino.saveFrameTrigger = false;
             SaveFrame(outputTexture);
+            if (MissionControl.captureImage) MissionControl.captureImage = false;
         }
 
-        if (MissionControl.scanStarted == true && faded == false)
+        if (MissionControl.state == MissionControl.states.scanning && faded == false)
         {
             faded = true;
-            SaveFrame(outputTexture);
             StartCoroutine(FadeToBlack(0.01f));
         }
-        */
+        
 
         if (Analyzer.startSim == true) Analyzer.startSim = false;
     }
@@ -161,7 +157,6 @@ public class runComputeShader : MonoBehaviour
         }
     }
 
-    /*
     private void SaveFrame(RenderTexture texRaw)
     {
         Texture2D tex = new Texture2D (texRaw.width, texRaw.height);
@@ -169,14 +164,16 @@ public class runComputeShader : MonoBehaviour
 
         tex.ReadPixels(new Rect(0, 0, texRaw.width, texRaw.height), 0, 0);
         tex.Apply();
+
+        string fileID = "visitor_" + DateTime.Now.ToString("yyyyMMddHHmmss");
+        if (fileCounter > 1) fileID += "_0" + fileCounter;
         
         byte[] bytes = tex.EncodeToJPG();
-        File.WriteAllBytes(MissionControl.datapath + "/results/result_" + MissionControl.fileID + "_00" + fileCounter + ".jpg", bytes);
+        File.WriteAllBytes(MissionControl.resultPath + fileID +  ".jpg", bytes);
         fileCounter++;
     }
-    */
 
-    public IEnumerator FadeToBlack(float fadeAmount)
+    public  IEnumerator FadeToBlack(float fadeAmount)
     {
         if (debug == true) print("shader fade out started");
 
