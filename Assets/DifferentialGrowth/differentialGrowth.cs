@@ -193,6 +193,8 @@ public class differentialGrowth : MonoBehaviour
     {
         growCounter = 0;
         simRunning = true;
+
+        if (firstShape == null) firstShape = InitStartCircle(1f, 64);
         nodes = new KDTree(firstShape, maxPointsPerLeafNode);
 
         // INIT NODE ID MANAGEMENT
